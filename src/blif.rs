@@ -103,9 +103,10 @@ impl Var {
 
 }
 
+#[derive(Debug, Eq, PartialEq)]
 pub enum Element {
-    LUT,
-    Register
+    LUT(LUT),
+    Register(Register)
 }
 
 pub struct Model {
@@ -113,6 +114,20 @@ pub struct Model {
     inputs: Vec<Var>,
     outputs: Vec<Var>,
     elements: Vec<Element>
+}
+
+impl Model {
+    pub fn new<S>(name: S,
+                  inputs: Vec<Var>,
+                  outputs: Vec<Var>,
+                  elements: Vec<Element>) -> Model where S: Into<String> {
+        Model{
+            name: name.into(),
+            inputs,
+            outputs,
+            elements
+        }
+    }
 }
 
 named!(string, take_while1!(is_alphanumeric));
@@ -123,19 +138,28 @@ named_args!(
 );
 
 named!(
-    get_model_name<&str, &str>,
-    call!(kv, ".model ")
+    alphanum, take_while!(is_alphanumeric)
 );
 
 named!(
-    alphanum, take_while!(is_alphanumeric)
+    get_model_name<&str, &str>,
+    do_parse!(
+        name: preceded!(tag!(".model "), is_not!(" \n")) >>
+        newline >>
+        (name)
+    )
 );
+
+#[test]
+fn test_get_model_name() {
+    assert_eq!(get_model_name(".model counter\n"), Ok(("", "counter")));
+}
 
 named!(
     get_inputs<&str, Vec<Var>>,
     do_parse!(
         alt!(tag!(".inputs ") | tag!(".inputs")) >>
-        inputs: separated_list0!(tag!(" "), alphanumeric1) >>
+        inputs: separated_list0!(tag!(" "), is_not!(" \n")) >>
         newline >>
         (inputs.into_iter().map(|x| Var::new(x.to_string())).collect())
     )
@@ -152,7 +176,7 @@ named!(
     get_outputs<&str, Vec<Var>>,
     do_parse!(
         alt!(tag!(".outputs ") | tag!(".outputs")) >>
-        outputs: separated_list0!(tag!(" "), alphanumeric1) >>
+        outputs: separated_list0!(tag!(" "), is_not!(" \n")) >>
         newline >>
         (outputs.into_iter().map(|x| Var::new(x.to_string())).collect())
     )
@@ -166,20 +190,20 @@ fn test_get_outputs() {
 }
 
 named!(
-    get_lut<&str, LUT>,
+    get_lut<&str, Element>,
     do_parse!(
         tag!(".names ") >>
         io: separated_list0!(tag!(" "), alphanumeric1) >>
         newline >>
         lut: separated_list0!(tag!("\n"), is_a!(" 01-")) >>
         newline >>
-        (LUT::new(io[0 .. io.len() -1].to_vec(), io[io.len()-1], lut))
+        (Element::LUT(LUT::new(io[0 .. io.len() -1].to_vec(), io[io.len()-1], lut)))
     )
 );
 
 #[test]
 fn test_get_lut() {
-    let mut lut = LUT::new(vec!("out0","out1","out2"), "return0", vec!("011 1", "100 1"));
+    let mut lut = Element::LUT(LUT::new(vec!("out0","out1","out2"), "return0", vec!("011 1", "100 1")));
     assert_eq!(get_lut(".names out0 out1 out2 return0\n011 1\n100 1\n.names"), Ok((".names", lut)));
 }
 
@@ -196,7 +220,7 @@ named!(
 
 
 named!(
-    get_reg<&str, Register>,
+    get_reg<&str, Element>,
     do_parse!(
         tag!(".latch ") >>
         input: is_not!(" \n") >>
@@ -206,32 +230,80 @@ named!(
         opt!(complete!(tag!(" "))) >>
         init: opt!(one_of!("0123")) >>
         newline >>
-        (Register::new(input, output, clock, init))
+        (Element::Register(Register::new(input, output, clock, init)))
     )
 );
 
 #[test]
 fn test_get_reg() {
-    let mut reg = Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), Some('2'));
+    let mut reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), Some('2')));
     assert_eq!(get_reg(".latch $0out[8:0][8] out[8] re clock 2\n"), Ok(("", reg)));
 
-    let mut reg = Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), None);
+    let mut reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), None));
     assert_eq!(get_reg(".latch $0out[8:0][8] out[8] re clock\n"), Ok(("", reg)));
 
-    let mut reg = Register::new("$0out[8:0][8]", "out[8]", None, None);
+    let mut reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", None, None));
     assert_eq!(get_reg(".latch $0out[8:0][8] out[8]\n"), Ok(("", reg)));
 
-    let mut reg = Register::new("$0out[8:0][8]", "out[8]", None, Some('2'));
+    let mut reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", None, Some('2')));
     assert_eq!(get_reg(".latch $0out[8:0][8] out[8] 2\n"), Ok(("", reg)));
 }
 
-
-
+named!(
+    get_model<&str, Model>,
+    do_parse!(
+        name: get_model_name >>
+        inputs: get_inputs >>
+        outputs: get_outputs >>
+        elements: many0!(alt!(get_lut | get_reg)) >>
+        (Model::new(name, inputs, outputs, elements))
+    )
+);
 
 #[test]
-fn test_kv_parse() {
-    assert_eq!(get_model_name(".model counter"), Ok(("", "counter")));
+fn test_get_model() {
+    // TODO: Create full test with example model
+    let mut model = get_model(
+r#".model toplevel
+.inputs clock plain[0] plain[1] plain[2] plain[3]
+.outputs cipher[0] cipher[1] cipher[2] cipher[3]
+.names state[3] state[2] state[1] state[0] done
+1000 1
+.names state[3] state[0] mod.state[0] $abc$8433$n994 $0\state[3:0][0]
+0001 1
+0011 1
+0101 1
+0110 1
+0111 1
+1100 1
+1101 1
+1110 1
+1111 1
+.latch $0\out[255:0][222] out[222] re clock 2
+.latch $0\out[255:0][223] out[223] re clock 2
+.latch $0\out[255:0][224] out[224] re clock 2
+.names mod.state[0] $abc$8433$n2278 $abc$8433$n1807 $abc$8433$n1806 $abc$8433$n2289
+0011 1
+0111 1
+1100 1
+1101 1
+1110 1
+1111 1"#);
+    match model {
+        Ok(_) => assert!(true),
+        Err(e) => assert!(false, "{}", e)
+    };
 }
+
+
+// named!(
+//     parse_blif<&str, &str>,
+//     do_parse!(
+
+//     )
+// )
+
+
 
 
 // named!(
