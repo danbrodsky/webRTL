@@ -6,6 +6,11 @@ use nom::{
 };
 
 use std::collections::HashMap;
+use std::sync::Mutex;
+
+lazy_static! {
+    pub static ref STATE: Mutex<HashMap<String, u8>> = Mutex::new(HashMap::new());
+}
 
 
 #[derive(Debug, Eq, PartialEq)]
@@ -79,13 +84,15 @@ impl Register {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct Var  {
-    name: String
+    name: String,
 }
 
 impl Var {
 
     pub fn new<S>(name: S) -> Var where S: Into<String> {
-        Var{name: name.into()}
+        let n: String = name.into();
+        STATE.lock().unwrap().insert(n.clone(), 0);
+        Var{name: n}
     }
 
 }
@@ -117,16 +124,24 @@ impl Model {
     }
 }
 
-named!(string, take_while1!(is_alphanumeric));
+pub struct Configuration {
 
-named_args!(
-    kv<'a>(key: &str)<&'a str, &'a str>,
-    preceded!(tag!(key), alphanumeric1)
-);
+}
 
-named!(
-    alphanum, take_while!(is_alphanumeric)
-);
+
+// TODO:
+// - add parsing for inner models [x] (there are no inner modules since design is flattened)
+// - form a graph structure representing order of true dependencies of different blocks [x] (yosys already does this)
+// - implement LUT function for giving output on given input [ ]
+// - create IOB logic for r/w memory [ ]
+
+// Each Var needs to hold its bit value [x]
+// assume single clock for now
+// a single cycle should run all LUTs (now CLBs) and IOBs [ ]
+
+// eval loop for executing configuration [ ]
+// output pins for drawing to screen [ ]
+
 
 named!(
     get_model_name<&str, &str>,
@@ -247,10 +262,11 @@ named!(
     )
 );
 
+
 #[test]
 fn test_get_model() {
     // TODO: Create full test with example model
-    let mut model = get_model(
+    assert!(get_model(
 r#".model toplevel
 .inputs clock plain[0] plain[1] plain[2] plain[3]
 .outputs cipher[0] cipher[1] cipher[2] cipher[3]
@@ -275,12 +291,9 @@ r#".model toplevel
 1100 1
 1101 1
 1110 1
-1111 1"#);
-    match model {
-        Ok(_) => assert!(true),
-        Err(e) => assert!(false, "{}", e)
-    };
+1111 1"#).is_ok());
 }
+
 
 named!(
     garbage_line<&str, &str>,
@@ -306,6 +319,7 @@ pub fn parse_blif(mut input: &str) -> Vec<Model> {
     }
     models
 }
+
 
 #[test]
 fn test_parse_blif() {
