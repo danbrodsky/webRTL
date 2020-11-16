@@ -9,15 +9,18 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 
 lazy_static! {
+    /// Stores the current state of all signals
     pub static ref STATE: Mutex<HashMap<String, u8>> = Mutex::new(HashMap::new());
 }
 
 
+/// Lookup (Truth) table for mapping input signals to output signals
+/// only stores data on mapping, signal values are stored in STATE
 #[derive(Debug, Eq, PartialEq)]
 pub struct LUT {
     inputs: Vec<Var>,
     output: Var,
-    mappings: HashMap<String, u8>
+    mappings: HashMap<Vec<u8>, u8>
 }
 
 impl LUT {
@@ -31,15 +34,39 @@ impl LUT {
         };
         for line in mappings {
             let kv: Vec<&str> = line.split_whitespace().collect();
-            let k = kv[0].to_string();
+            let k = kv[0].to_string()
+                .chars()
+                .map(|c| c.to_digit(2).unwrap() as u8).collect();
             let v = isize::from_str_radix(kv[1],2).unwrap() as u8;
             lut.mappings.insert(k, v);
         }
 
         lut
     }
+
+    /// executes the LUT, setting the output signal based on current input
+    pub fn exec(self) {
+
+        let mut signals: Vec<u8> = vec!();
+        for var in self.inputs {
+            match STATE.lock().unwrap().get(&var.name) { // TODO: .lock().unwrap() as a macro possible?
+                Some(&val) => signals.push(val),
+                None => panic!("var '{}' was not initialized", var.name)
+            };
+        }
+
+        match self.mappings.get(&signals) {
+            Some(&v) => {
+                STATE.lock().unwrap().insert(self.output.name, v);
+            },
+            None => {}
+        };
+    }
 }
 
+
+/// Direct mapping of input signal to output signal based on clock or other hardware
+/// Rarely used in design, usually just maps signals to start at end of cycle
 #[derive(Debug, Eq, PartialEq)]
 pub struct Register {
     input: Var,
@@ -82,6 +109,7 @@ impl Register {
     }
 }
 
+/// Basic signal in design, holds only metadata while value is in STATE
 #[derive(Debug, Eq, PartialEq)]
 pub struct Var  {
     name: String,
@@ -97,12 +125,14 @@ impl Var {
 
 }
 
+/// enumeration of possible Basic Logic Elements (BLE)
 #[derive(Debug, Eq, PartialEq)]
 pub enum Element {
     LUT(LUT),
     Register(Register)
 }
 
+/// Holds complete model representation
 pub struct Model {
     name: String,
     inputs: Vec<Var>,
