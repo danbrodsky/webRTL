@@ -3,8 +3,9 @@ extern crate nom;
 #[macro_use]
 extern crate lazy_static;
 
-pub mod blif;
+pub mod config;
 
 fn main() {
+    // TODO: Entry into program
     println!("Hello, world!");
 }

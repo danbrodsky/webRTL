@@ -7,6 +7,7 @@ use nom::{
 
 use std::collections::HashMap;
 use std::sync::Mutex;
+use core::fmt::Debug;
 
 lazy_static! {
     /// Stores the current state of all signals
@@ -22,6 +23,7 @@ pub struct LUT {
     output: Var,
     mappings: HashMap<Vec<u8>, u8>
 }
+
 
 impl LUT {
 
@@ -45,7 +47,7 @@ impl LUT {
     }
 
     /// executes the LUT, setting the output signal based on current input
-    pub fn exec(self) {
+    fn exec(self) {
 
         let mut signals: Vec<u8> = vec!();
         for var in self.inputs {
@@ -107,6 +109,12 @@ impl Register {
             init: start
         }
     }
+
+    fn exec(self) {
+        // TODO: handle varying clock triggers if possible
+        let &i = STATE.lock().unwrap().get(&self.input.name).unwrap();
+        STATE.lock().unwrap().insert(self.output.name, i);
+    }
 }
 
 /// Basic signal in design, holds only metadata while value is in STATE
@@ -162,15 +170,17 @@ pub struct Configuration {
 // TODO:
 // - add parsing for inner models [x] (there are no inner modules since design is flattened)
 // - form a graph structure representing order of true dependencies of different blocks [x] (yosys already does this)
-// - implement LUT function for giving output on given input [ ]
+// - implement LUT function for giving output on given input [x]
+// eval loop for executing configuration [ ]
+// a single cycle should run all LUTs (now CLBs) and IOBs [ ]
 // - create IOB logic for r/w memory [ ]
+// output pins for drawing to screen [ ]
 
 // Each Var needs to hold its bit value [x]
 // assume single clock for now
-// a single cycle should run all LUTs (now CLBs) and IOBs [ ]
 
-// eval loop for executing configuration [ ]
-// output pins for drawing to screen [ ]
+// never use traits for object instantiation, self-referencing traits are a bitch
+
 
 
 named!(
