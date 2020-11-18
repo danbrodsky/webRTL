@@ -140,7 +140,17 @@ pub enum Element {
     Register(Register)
 }
 
+impl Element {
+    fn exec(self) {
+        match self {
+            Element::LUT(l) => l.exec(),
+            Element::Register(r) => r.exec()
+        };
+    }
+}
+
 /// Holds complete model representation
+#[derive(Debug)]
 pub struct Model {
     name: String,
     inputs: Vec<Var>,
@@ -152,7 +162,7 @@ impl Model {
     pub fn new<S>(name: S,
                   inputs: Vec<Var>,
                   outputs: Vec<Var>,
-                  elements: Vec<Element>) -> Model where S: Into<String> {
+                  elements: Vec<Element>) -> Self where S: Into<String> {
         Model{
             name: name.into(),
             inputs,
@@ -160,11 +170,25 @@ impl Model {
             elements
         }
     }
+
+    pub fn eval(self) {
+        for e in self.elements {
+            e.exec();
+        }
+
+        // TODO: check if this get compiled in when debug is disabled
+        for out in self.outputs {
+            debug!("output '{o}' value: {v}", o=out.name, v=STATE.lock()
+                   .unwrap()
+                   .get(&out.name)
+                   .unwrap());
+        }
+    }
 }
 
 /// Entry for getting FPGA configuration
 pub struct Config {
-    models: Vec<Model>
+    pub models: Vec<Model>
 }
 
 
@@ -187,6 +211,7 @@ impl Config {
                 None => { input = garbage_line(input).unwrap().0 }
             };
         }
+        info!("Parsed configuration: {:#?}", models);
         models
     }
 }
@@ -322,7 +347,7 @@ named!(
         name: get_model_name >>
         inputs: get_inputs >>
         outputs: get_outputs >>
-        elements: many0!(alt!(get_lut | get_reg)) >>
+        elements: many1!(alt!(get_lut | get_reg)) >>
         (Model::new(name, inputs, outputs, elements))
     )
 );
