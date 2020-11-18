@@ -1,9 +1,11 @@
 use nom::{
-    character::is_alphanumeric,
     character::complete::newline,
-    character::complete::alphanumeric1,
-    combinator::opt
+    combinator::opt,
+    combinator::complete,
+    multi::many1,
+    branch::alt
 };
+
 
 use std::collections::HashMap;
 use std::sync::Mutex;
@@ -47,10 +49,10 @@ impl LUT {
     }
 
     /// executes the LUT, setting the output signal based on current input
-    fn exec(self) {
+    fn exec(&self) {
 
         let mut signals: Vec<u8> = vec!();
-        for var in self.inputs {
+        for var in &self.inputs {
             match STATE.lock().unwrap().get(&var.name) { // TODO: .lock().unwrap() as a macro possible?
                 Some(&val) => signals.push(val),
                 None => panic!("var '{}' was not initialized", var.name)
@@ -59,9 +61,11 @@ impl LUT {
 
         match self.mappings.get(&signals) {
             Some(&v) => {
-                STATE.lock().unwrap().insert(self.output.name, v);
+                STATE.lock().unwrap().insert(self.output.name.clone(), v);
             },
-            None => {}
+            None => {
+                STATE.lock().unwrap().insert(self.output.name.clone(), 0);
+            }
         };
     }
 }
@@ -110,10 +114,10 @@ impl Register {
         }
     }
 
-    fn exec(self) {
+    fn exec(&self) {
         // TODO: handle varying clock triggers if possible
         let &i = STATE.lock().unwrap().get(&self.input.name).unwrap();
-        STATE.lock().unwrap().insert(self.output.name, i);
+        STATE.lock().unwrap().insert(self.output.name.clone(), i);
     }
 }
 
@@ -141,7 +145,7 @@ pub enum Element {
 }
 
 impl Element {
-    fn exec(self) {
+    fn exec(&self) {
         match self {
             Element::LUT(l) => l.exec(),
             Element::Register(r) => r.exec()
@@ -171,18 +175,15 @@ impl Model {
         }
     }
 
-    pub fn eval(self) {
-        for e in self.elements {
+    pub fn eval(&self) {
+        for e in &self.elements {
             e.exec();
         }
 
         // TODO: check if this get compiled in when debug is disabled
-        for out in self.outputs {
-            debug!("output '{o}' value: {v}", o=out.name, v=STATE.lock()
-                   .unwrap()
-                   .get(&out.name)
-                   .unwrap());
-        }
+        for out in &self.outputs {
+            info!("output '{o}' value: {v}", o=out.name,
+                  v=STATE.lock().unwrap().get(&out.name).unwrap());}
     }
 }
 
@@ -285,7 +286,7 @@ named!(
     get_lut<&str, Element>,
     do_parse!(
         tag!(".names ") >>
-        io: separated_list0!(tag!(" "), alphanumeric1) >>
+        io: separated_list0!(tag!(" "), is_not!(" \n")) >>
         newline >>
         lut: separated_list0!(tag!("\n"), is_a!(" 01-")) >>
         newline >>
@@ -296,7 +297,7 @@ named!(
 #[test]
 fn test_get_lut() {
     let mut lut = Element::LUT(LUT::new(vec!("out0","out1","out2"), "return0", vec!("011 1", "100 1")));
-    assert_eq!(get_lut(".names out0 out1 out2 return0\n011 1\n100 1\n.names"), Ok((".names", lut)));
+    assert_eq!(get_lut(".names out0 out1 out2 return0\n011 1\n100 1\nf"), Ok(("f", lut)));
 }
 
 named!(
@@ -347,7 +348,7 @@ named!(
         name: get_model_name >>
         inputs: get_inputs >>
         outputs: get_outputs >>
-        elements: many1!(alt!(get_lut | get_reg)) >>
+        elements: many1!(complete!(alt!(get_lut | get_reg))) >>
         (Model::new(name, inputs, outputs, elements))
     )
 );
@@ -429,4 +430,20 @@ r#"
     if blif.len() != 2 {
         assert!(false, "wrong number models returned.");
     }
+}
+
+#[test]
+fn test_get_element() {
+    let mut parser = many1(complete(alt((get_lut, get_reg))));
+    let out = parser(
+r#".names mod.state[1] mod.state[0] $abc$8433$n993
+10 1
+.latch $0\out[255:0][229] out[229] re clock 2
+.latch $0\out[255:0][230] out[230] re clock 2
+"#
+        );
+    println!("{:#?}", out);
+
+    assert!(out.unwrap().1.len() == 3);
+
 }
