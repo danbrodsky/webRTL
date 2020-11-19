@@ -1,22 +1,28 @@
 use crate::config;
 
-use config::Config;
+use config::*;
 
 pub struct Simulation {
-    config: Config
+    models: Vec<Model>
 }
 
 
 impl Simulation {
 
     pub fn init(config: Config) -> Self {
-        Simulation{ config }
+        Simulation{ models: config.models }
     }
 
-    /// runs the simulation in an infinite loop
-    pub fn run() {
-        // TODO: calls into wasm graphics backend when necessary
-        // this will probably require a simulated MMU layer in design
+    /// runs the simulation for one cycle
+    // TODO: This needs to run in a separate thread
+    // TODO: thread calls into wasm graphics backend when necessary
+    // this will probably require a simulated MMU layer in design
+    pub fn run(self) {
+
+        for m in self.models {
+            m.eval();
+        }
+
     }
 
 }
