@@ -17,6 +17,7 @@ lazy_static! {
 }
 
 
+
 /// Lookup (Truth) table for mapping input signals to output signals
 /// only stores data on mapping, signal values are stored in STATE
 #[derive(Debug, Eq, PartialEq)]
@@ -386,6 +387,7 @@ r#".model toplevel
 }
 
 
+// TODO: This fails when compiled to wasm, needs to be changed
 named!(
     garbage_line<&str, &str>,
     do_parse!(

@@ -5,11 +5,20 @@
 pub mod config;
 pub mod sim;
 
-use clap::{crate_version, App, Arg};
-use log::{Record, Level, Metadata, Log, LevelFilter};
+/// WASM
+
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+extern {
+    pub fn alert(s: &str);
+}
 
 struct SimpleLogger;
 
+/// LOGGING
+
+use log::{Record, Level, Metadata, Log, LevelFilter};
 impl Log for SimpleLogger {
     fn enabled(&self, metadata: &Metadata) -> bool {
         metadata.level() <= Level::Info
@@ -25,6 +34,10 @@ impl Log for SimpleLogger {
 }
 
 static LOGGER: SimpleLogger = SimpleLogger;
+
+/// ENTRY
+
+use clap::{crate_version, App, Arg};
 
 fn main() {
 
@@ -43,13 +56,10 @@ fn main() {
 
     let config_data = std::fs::read_to_string(args.value_of("blif").unwrap()).expect("blif file being read");
     let config = config::Config::new(&config_data);
-    debug!("config file read in");
 
     let sim = sim::Simulation::init(config);
 
     sim.run();
-
-    // sim.run()
 
     // TODO: Entry into program
 }

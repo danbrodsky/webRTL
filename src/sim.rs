@@ -17,12 +17,16 @@ impl Simulation {
     // TODO: This needs to run in a separate thread
     // TODO: thread calls into wasm graphics backend when necessary
     // this will probably require a simulated MMU layer in design
-    pub fn run(self) {
+    pub fn run(&self) {
 
-        for m in self.models {
+        for m in &self.models {
             m.eval();
         }
 
+    }
+
+    pub fn get(&self, var: &str) -> u8 {
+        STATE.lock().unwrap().get(var).unwrap().clone()
     }
 
 }
