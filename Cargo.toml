@@ -6,8 +6,12 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+crate-type = ["cdylib"]
+
 [dependencies]
 nom = "6.0.0-alpha3"
 lazy_static = "1.4.0"
 clap = "2.33.3"
 log = "0.4.11"
+wasm-bindgen = "0.2.68"
