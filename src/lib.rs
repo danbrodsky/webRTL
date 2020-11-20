@@ -1,13 +1,17 @@
 #[macro_use] extern crate nom;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
-#[macro_use] extern crate web_sys;
+extern crate web_sys;
 
 /// WASM
 
 extern crate console_error_panic_hook;
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::JsCast;
 use std::panic;
+use std::rc::Rc;
+use std::cell::RefCell;
+use web_sys::{CanvasRenderingContext2d};
 
 #[wasm_bindgen]
 extern {
@@ -24,11 +28,12 @@ macro_rules! console_log {
 
 #[wasm_bindgen]
 pub fn test_simulator() {
+    panic::set_hook(Box::new(console_error_panic_hook::hook));
     log::set_logger(&LOGGER).unwrap();
     log::set_max_level(LevelFilter::Info);
 
-    panic::set_hook(Box::new(console_error_panic_hook::hook));
     run();
+
 }
 
 
@@ -58,8 +63,10 @@ static LOGGER: WebLogger = WebLogger;
 
 pub mod config;
 pub mod sim;
+pub mod graphics;
 
 fn run() {
+    info!("run start");
 
     let config_data =
 r#".model counter
@@ -129,6 +136,37 @@ r#".model counter
     let sim = sim::Simulation::init(config);
 
     sim.run();
+
+    let document = web_sys::window().unwrap().document().unwrap();
+    let canvas = document.get_element_by_id("canvas").unwrap();
+    let canvas: web_sys::HtmlCanvasElement = canvas
+        .dyn_into::<web_sys::HtmlCanvasElement>()
+        .map_err(|_| ())
+        .unwrap();
+    let ctx = canvas
+        .get_context("2d")
+        .unwrap()
+        .unwrap()
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .unwrap();
+
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
+
+    *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+        // info!("frame request: {:?}", graphics::FRAME);
+
+        // this is safe since buffer size is always within modified bounds
+        unsafe {graphics::test_render();}
+        graphics::draw(&ctx).expect("failed drawing to screen");
+
+        graphics::request_animation_frame(f.borrow().as_ref().unwrap());
+    }) as Box<dyn FnMut()>));
+
+    graphics::request_animation_frame(g.borrow().as_ref().unwrap());
+
+    // let g = Some(Closure::wrap(Box::new(move || {
+    //     request_animation_frame(
 
     // TODO: Entry into program
 }
