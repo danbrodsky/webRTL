@@ -18,6 +18,44 @@ lazy_static! {
 
 
 
+/////////////////////////////////////////////////////////////////////////////
+// TODO: move to util.rs
+
+pub fn get(var: &str) -> u8 {
+    STATE.lock().unwrap().get(var).unwrap().clone()
+}
+
+// TODO: check that var being set is Model Input
+pub fn set(var: &str, val: u8) {
+    STATE.lock().unwrap().insert(var.into(), val);
+}
+
+pub fn set_n(var: &str, n: usize, val: u8) {
+    STATE.lock().unwrap().insert(format!("{}[{}]", var, n), val);
+}
+
+pub fn set_n_to_m(var: &str, n: usize, m: usize, val: Vec<u8>) {
+
+    // info!("setting {} to val {:#?}", var, val);
+    for b in n..m {
+
+        STATE.lock().unwrap().insert(format!("{}[{}]", var, b), val[b-n]);
+    }
+}
+
+// TODO: make this generic?
+pub fn to_bit_vec(v: u64) -> Vec<u8> {
+    let mut bv: Vec<u8> = vec!();
+    let mut n = v;
+    for _ in 0..64 {
+        bv.push((n & 0x1) as u8);
+        n = n >> 0x1;
+    }
+    bv
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
 /// Lookup (Truth) table for mapping input signals to output signals
 /// only stores data on mapping, signal values are stored in STATE
 #[derive(Debug, Eq, PartialEq)]
@@ -60,6 +98,7 @@ impl LUT {
             };
         }
 
+        // TODO: replace STATE.lock().unwrap()... with util function
         match self.mappings.get(&signals) {
             Some(&v) => {
                 STATE.lock().unwrap().insert(self.output.name.clone(), v);
@@ -185,6 +224,10 @@ impl Model {
         for out in &self.outputs {
             info!("output '{o}' value: {v}", o=out.name,
                   v=STATE.lock().unwrap().get(&out.name).unwrap());}
+        // clear all input signals
+        for inp in &self.inputs {
+            set(&inp.name, 0);
+        }
     }
 }
 
@@ -210,10 +253,14 @@ impl Config {
             input = res.0;
             match res.1 {
                 Some(m) => models.push(m),
-                None => { input = garbage_line(input).unwrap().0 }
+                None => {
+                    let g = garbage_line(input).unwrap();
+                    info!("line could not be parsed, skipping: {}", g.1);
+                    input = g.0;
+                }
             };
         }
-        info!("Parsed configuration: {:#?}", models);
+        // info!("Parsed configuration: {:#?}", models);
         models
     }
 }
@@ -291,13 +338,13 @@ named!(
         newline >>
         lut: separated_list0!(tag!("\n"), is_a!(" 01-")) >>
         newline >>
-        (Element::LUT(LUT::new(io[0 .. io.len() -1].to_vec(), io[io.len()-1], lut)))
+        (Element::LUT(LUT::new(io[0 .. io.len()-1].to_vec(), io[io.len()-1], lut)))
     )
 );
 
 #[test]
 fn test_get_lut() {
-    let mut lut = Element::LUT(LUT::new(vec!("out0","out1","out2"), "return0", vec!("011 1", "100 1")));
+    let lut = Element::LUT(LUT::new(vec!("out0","out1","out2"), "return0", vec!("011 1", "100 1")));
     assert_eq!(get_lut(".names out0 out1 out2 return0\n011 1\n100 1\nf"), Ok(("f", lut)));
 }
 
