@@ -10,7 +10,14 @@ pub struct Simulation {
 impl Simulation {
 
     pub fn init(config: Config) -> Self {
-        Simulation{ models: config.models }
+        let mut models = vec!();
+        info!("creating simulation");
+        for m in config.models {
+            models.push(m.order());
+        }
+
+        info!("{:#?}", models[0]);
+        Simulation{ models: models }
     }
 
     /// runs the simulation for one cycle
@@ -23,10 +30,6 @@ impl Simulation {
             m.eval();
         }
 
-    }
-
-    pub fn get(&self, var: &str) -> u8 {
-        STATE.lock().unwrap().get(var).unwrap().clone()
     }
 
 }

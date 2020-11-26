@@ -9,6 +9,7 @@ use nom::{
 
 use std::collections::HashMap;
 use std::sync::Mutex;
+use std::mem;
 use core::fmt::Debug;
 
 lazy_static! {
@@ -27,8 +28,6 @@ macro_rules! get {
         STATE.lock().unwrap().get($mv).unwrap()
     };
 }
-
-
 
 // TODO: check that var being set is Model Input
 pub fn set(var: &str, val: u8) {
@@ -62,7 +61,7 @@ pub fn to_bit_vec(v: u64) -> Vec<u8> {
 
 /// Lookup (Truth) table for mapping input signals to output signals
 /// only stores data on mapping, signal values are stored in STATE
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Default)]
 pub struct LUT {
     inputs: Vec<Var>,
     output: Var,
@@ -106,6 +105,7 @@ impl LUT {
         match self.mappings.get(&signals) {
             Some(&v) => {
                 set(&self.output.name, v);
+                info!("{} set to high", self.output.name);
             },
             None => {
                 set(&self.output.name, 0);
@@ -119,7 +119,7 @@ impl LUT {
 /// Rarely used in design, usually just maps signals to start at end of cycle
 #[derive(Debug, Eq, PartialEq)]
 pub struct Register {
-    input: Var,
+    input: Vec<Var>,
     output: Var,
     signal: String,
     control: Var,
@@ -150,7 +150,7 @@ impl Register {
         };
 
         Register{
-            input: Var::new(input),
+            input: vec!(Var::new(input)),
             output: Var::new(output),
             signal: signal.to_string(),
             control: Var::new(control),
@@ -160,12 +160,16 @@ impl Register {
 
     fn exec(&self) {
         // TODO: handle varying clock triggers if possible
-        set(&self.output.name, get!(&self.input.name).val);
+        info!("{} set to {}", self.output.name, get!(&self.input[0].name).val);
+        let state = STATE.lock().unwrap();
+        let val = state.get(&self.input[0].name).unwrap().val;
+        mem::drop(state);
+        set(&self.output.name, val);
     }
 }
 
 /// Basic signal in design, holds only metadata while value is in STATE
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Default)]
 pub struct Var  {
     name: String,
     val: u8,
@@ -176,14 +180,15 @@ impl Var {
 
     pub fn new<S>(name: S) -> Var where S: Into<String> {
         let n: String = name.into();
-        match STATE.lock().unwrap().get(&n.clone()) {
-            Some(v) => Var{name: v.name.clone(), val: v.val, src: v.src},
-            None => {
-                // TODO: structs should just store name of var instead of copy
-                let v = Var{name: n.clone(), val: 0, src: 0};
-                STATE.lock().unwrap().insert(n.clone(), v);
-                Var{name: n, val: 0, src: 0}
-            }
+        let mut state = STATE.lock().unwrap();
+        if let Some(v) = state.get(&n) {
+            // TODO: structs should just store name of var instead of copy
+            Var{name: v.name.clone(), val: v.val.clone(), src: v.src.clone()}
+        }
+        else {
+            let v = Var{name: n.clone(), val: 0, src: 0};
+            state.insert(n.clone(), v);
+            Var{name: n, val: 0, src: 0}
         }
 
     }
@@ -230,25 +235,69 @@ impl Model {
 
     // TODO: Implement place and route for FPGA memory
     // https://www.eng.uwo.ca/people/wwang/ece616a/616_extra/notes_web/5_dphysicaldesign.pdf
-    pub fn order(self) {
+    /// Crappy Topological sort implementation because too lazy to match a real FPGA
+    pub fn order(mut self) -> Self {
 
-        let tmp: Vec<Element> = vec!();
+        let mut sorted_element_idx: Vec<usize> = vec!();
 
-        let (tmp, elements): (Vec<_>, Vec<_>) = self.elements.into_iter().partition(|e| {
+        let mut seen_vars: Vec<String> = self.inputs.iter().map(|i| i.name.clone()).collect();
+        let mut element_inputs: &Vec<Var>;
+        let mut element_output: &Var;
+
+        let mut input_counter: Vec<usize> = vec![0; self.elements.len()];
+
+        let mut elements = self.elements;
+
+        // get output vars from latches too since they have an initial value
+        for e in &elements {
             if let Element::Register(r) = e {
-                return true
+                seen_vars.push(r.output.name.clone());
             }
-            return false
-        });
-
-
-
-        // tmp.push();
-
-
-        while !&elements.is_empty() {
-
         }
+
+        // starting w/ input port vars, track the # of seen vars that each
+        // element has a dependency on
+        while !seen_vars.is_empty() {
+
+            let v = seen_vars.remove(0);
+            info!("{:#?}", seen_vars);
+
+            for i in 0..elements.len() {
+                match &elements[i] {
+                    Element::LUT(l) => {
+                        element_inputs = &l.inputs;
+                        element_output = &l.output;
+                    }
+                    Element::Register(r) => {
+                        element_inputs = &r.input;
+                        element_output = &r.output;
+                    }
+                };
+
+                // when element dependencies all seen, record element idx
+                // and add output var to seen
+                for e in element_inputs {
+                    if v == e.name {
+                        input_counter[i] += 1;
+                        if input_counter[i] == element_inputs.len() {
+                            sorted_element_idx.push(i);
+                            seen_vars.push(element_output.name.clone());
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut sorted_elements: Vec<Element> = vec!();
+        for idx in sorted_element_idx {
+            let dummy: LUT = Default::default();
+            sorted_elements.push(mem::replace(&mut elements[idx], Element::LUT(dummy)));
+        }
+
+        self.elements = sorted_elements;
+
+        self
+
     }
 
     pub fn eval(&self) {
@@ -297,7 +346,7 @@ impl Config {
                 }
             };
         }
-        // info!("Parsed configuration: {:#?}", models);
+        info!("Parsed configuration: {:#?}", models);
         models
     }
 }
