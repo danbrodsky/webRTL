@@ -1,0 +1,12 @@
+read_verilog /tmp/synth.v
+
+hierarchy
+proc
+techmap -map +/adff2dff.v
+
+synth -flatten -auto-top
+
+abc -lut 4
+clean
+
+write_blif -impltf /tmp/synth.blif
