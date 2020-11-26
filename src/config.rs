@@ -13,7 +13,7 @@ use core::fmt::Debug;
 
 lazy_static! {
     /// Stores the current state of all signals
-    pub static ref STATE: Mutex<HashMap<String, u8>> = Mutex::new(HashMap::new());
+    pub static ref STATE: Mutex<HashMap<String, Var>> = Mutex::new(HashMap::new());
 }
 
 
@@ -21,25 +21,29 @@ lazy_static! {
 /////////////////////////////////////////////////////////////////////////////
 // TODO: move to util.rs
 
-pub fn get(var: &str) -> u8 {
-    STATE.lock().unwrap().get(var).unwrap().clone()
+#[macro_export]
+macro_rules! get {
+    ( $mv: expr ) => {
+        STATE.lock().unwrap().get($mv).unwrap()
+    };
 }
+
+
 
 // TODO: check that var being set is Model Input
 pub fn set(var: &str, val: u8) {
-    STATE.lock().unwrap().insert(var.into(), val);
+    STATE.lock().unwrap().get_mut(var.into()).unwrap().val = val;
 }
 
 pub fn set_n(var: &str, n: usize, val: u8) {
-    STATE.lock().unwrap().insert(format!("{}[{}]", var, n), val);
+    STATE.lock().unwrap().get_mut(&format!("{}[{}]", var, n)).unwrap().val = val;
 }
 
 pub fn set_n_to_m(var: &str, n: usize, m: usize, val: Vec<u8>) {
 
     // info!("setting {} to val {:#?}", var, val);
     for b in n..m {
-
-        STATE.lock().unwrap().insert(format!("{}[{}]", var, b), val[b-n]);
+        STATE.lock().unwrap().get_mut(&format!("{}[{}]", var, b)).unwrap().val = val[b-n];
     }
 }
 
@@ -93,7 +97,7 @@ impl LUT {
         let mut signals: Vec<u8> = vec!();
         for var in &self.inputs {
             match STATE.lock().unwrap().get(&var.name) { // TODO: .lock().unwrap() as a macro possible?
-                Some(&val) => signals.push(val),
+                Some(mv) => signals.push(mv.val),
                 None => panic!("var '{}' was not initialized", var.name)
             };
         }
@@ -101,10 +105,10 @@ impl LUT {
         // TODO: replace STATE.lock().unwrap()... with util function
         match self.mappings.get(&signals) {
             Some(&v) => {
-                STATE.lock().unwrap().insert(self.output.name.clone(), v);
+                set(&self.output.name, v);
             },
             None => {
-                STATE.lock().unwrap().insert(self.output.name.clone(), 0);
+                set(&self.output.name, 0);
             }
         };
     }
@@ -156,23 +160,32 @@ impl Register {
 
     fn exec(&self) {
         // TODO: handle varying clock triggers if possible
-        let &i = STATE.lock().unwrap().get(&self.input.name).unwrap();
-        STATE.lock().unwrap().insert(self.output.name.clone(), i);
+        set(&self.output.name, get!(&self.input.name).val);
     }
 }
 
 /// Basic signal in design, holds only metadata while value is in STATE
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Var  {
     name: String,
+    val: u8,
+    src: usize
 }
 
 impl Var {
 
     pub fn new<S>(name: S) -> Var where S: Into<String> {
         let n: String = name.into();
-        STATE.lock().unwrap().insert(n.clone(), 0);
-        Var{name: n}
+        match STATE.lock().unwrap().get(&n.clone()) {
+            Some(v) => Var{name: v.name.clone(), val: v.val, src: v.src},
+            None => {
+                // TODO: structs should just store name of var instead of copy
+                let v = Var{name: n.clone(), val: 0, src: 0};
+                STATE.lock().unwrap().insert(n.clone(), v);
+                Var{name: n, val: 0, src: 0}
+            }
+        }
+
     }
 
 }
@@ -215,6 +228,29 @@ impl Model {
         }
     }
 
+    // TODO: Implement place and route for FPGA memory
+    // https://www.eng.uwo.ca/people/wwang/ece616a/616_extra/notes_web/5_dphysicaldesign.pdf
+    pub fn order(self) {
+
+        let tmp: Vec<Element> = vec!();
+
+        let (tmp, elements): (Vec<_>, Vec<_>) = self.elements.into_iter().partition(|e| {
+            if let Element::Register(r) = e {
+                return true
+            }
+            return false
+        });
+
+
+
+        // tmp.push();
+
+
+        while !&elements.is_empty() {
+
+        }
+    }
+
     pub fn eval(&self) {
         for e in &self.elements {
             e.exec();
@@ -222,8 +258,9 @@ impl Model {
 
         // TODO: check if this get compiled in when debug is disabled
         for out in &self.outputs {
-            info!("output '{o}' value: {v}", o=out.name,
-                  v=STATE.lock().unwrap().get(&out.name).unwrap());}
+            info!("output '{o}' value: {:#?}", STATE.lock().unwrap().get(&out.name).unwrap(),
+                  o=out.name);
+        }
         // clear all input signals
         for inp in &self.inputs {
             set(&inp.name, 0);
@@ -270,10 +307,12 @@ impl Config {
 // - add parsing for inner models [x] (there are no inner modules since design is flattened)
 // - form a graph structure representing order of true dependencies of different blocks [x] (yosys already does this)
 // - implement LUT function for giving output on given input [x]
-// eval loop for executing configuration [ ]
-// a single cycle should run all LUTs (now CLBs) and IOBs [ ]
-// - create IOB logic for r/w memory [ ]
+// eval loop for executing configuration [x]
+// a single cycle should run all LUTs (now CLBs) and IOBs [x]
+// - create IOB logic for r/w memory [x]
 // output pins for drawing to screen [ ]
+// The order of LUTs in blif is random and actually needs to be represented
+// in a dependency structure
 
 // Each Var needs to hold its bit value [x]
 // assume single clock for now
@@ -308,9 +347,21 @@ named!(
 
 #[test]
 fn test_get_inputs() {
-    assert_eq!(get_inputs(".inputs in0 in1 in2\n"), Ok(("", vec!(Var{name:"in0".to_string()},
-                                                               Var{name:"in1".to_string()},
-                                                               Var{name:"in2".to_string()}))));
+    assert_eq!(
+        get_inputs(".inputs in0 in1 in2\n"),
+        Ok(("",vec!(
+            Var{name:"in0".to_string(),
+                src: 0,
+                val: 0
+            },
+            Var{name:"in1".to_string(),
+                src: 0,
+                val: 0
+            },
+            Var{name:"in2".to_string(),
+                src: 0,
+                val: 0
+            }))));
 }
 
 named!(
@@ -325,9 +376,21 @@ named!(
 
 #[test]
 fn test_get_outputs() {
-    assert_eq!(get_outputs(".outputs out0 out1 out2\n"), Ok(("", vec!(Var{name:"out0".to_string()},
-                                                               Var{name:"out1".to_string()},
-                                                               Var{name:"out2".to_string()}))));
+    assert_eq!(
+        get_outputs(".outputs out0 out1 out2\n"),
+        Ok(("", vec!(
+            Var{name:"out0".to_string(),
+                src: 0,
+                val: 0
+            },
+            Var{name:"out1".to_string(),
+                src: 0,
+                val: 0
+            },
+            Var{name:"out2".to_string(),
+                src: 0,
+                val: 0
+            }))));
 }
 
 named!(
