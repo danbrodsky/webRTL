@@ -7,14 +7,18 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
-use core::sync::atomic::{AtomicU32, Ordering};
+use core::sync::atomic::{ AtomicUsize, Ordering};
+use crate::config;
+use config::*;
 
-const VGA_WIDTH: usize = 640;
-const VGA_HEIGHT: usize = 480;
+const VGA_WIDTH: usize = 640+161;
+const VGA_HEIGHT: usize = 480+44;
 const VGA_BUFFER_SIZE: usize = VGA_WIDTH * VGA_HEIGHT;
 
 
-pub static FRAME: AtomicU32 = AtomicU32::new(0);
+pub static FRAME: AtomicUsize = AtomicUsize::new(0);
+//pub static POS_X: AtomicU32 = AtomicU32::new(0);
+//pub static POS_Y: AtomicU32 = AtomicU32::new(0);
 pub static mut BUFFER: [u32; VGA_BUFFER_SIZE] = [0; VGA_BUFFER_SIZE];
 
 pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
@@ -27,14 +31,27 @@ pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
 
 // this is safe since buffer size is always within modified bounds
 pub unsafe fn test_render() {
-    let f = FRAME.fetch_add(1, Ordering::Relaxed);
+    let f = FRAME.fetch_add(1, Ordering::Relaxed) as usize;
+    let px = config::get_n_to_m("pixel", 0, 4);
+    // warn!("{:#?}", px);
 
-    for y in 0..VGA_HEIGHT {
-        for x in 0..VGA_WIDTH {
-            BUFFER[y * VGA_WIDTH + x] =
-                f.wrapping_add((x^y) as u32) | 0xFF_00_00_00;
+    let mut color = 0xFF_00_00_00;
+    for i in 0..3 {
+        if px[i] == 1 {
+            color |= 0xFF << (i*8);
         }
     }
+    // warn!("{:#?}", color);
+    BUFFER[f] = color;
+
+    FRAME.compare_and_swap(VGA_BUFFER_SIZE, 0, Ordering::Relaxed);
+
+    // for y in 0..VGA_HEIGHT {
+    //     for x in 0..VGA_WIDTH {
+    //         BUFFER[y * VGA_WIDTH + x] = color
+    //             // f.wrapping_add((x^y) as u32) | 0xFF_00_00_00;
+    //     }
+    // }
 }
 
 pub fn draw(

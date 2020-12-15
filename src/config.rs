@@ -29,6 +29,15 @@ macro_rules! get {
     };
 }
 
+pub fn get_n_to_m(var: &str, n: usize, m: usize) -> Vec<u8> {
+    let s = STATE.lock().unwrap();
+    let mut out = vec!();
+    for b in n..m {
+        out.push(s.get(&format!("{}[{}]", var, b)).unwrap().val)
+    }
+    return out
+}
+
 // TODO: check that var being set is Model Input
 pub fn set(var: &str, val: u8) {
     STATE.lock().unwrap().get_mut(var.into()).unwrap().val = val;

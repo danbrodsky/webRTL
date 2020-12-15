@@ -63,16 +63,16 @@ fn main() {
 
     let mut i = 0;
     sim.run();
-    for _ in 0..8 {
-        i += 1;
-        if i > 4 {
-            i = 4;
-        }
-        config::set("clk", 1);
-        config::set("en", 1);
+    for _ in 0..640 {
+        // i += 1;
+        // if i > 4 {
+        //     i = 4;
+        // }
 
-        config::set_n_to_m("c$arg_0", 0, 8, config::to_bit_vec(i));
-        config::set_n_to_m("c$arg_1", 0, 8, config::to_bit_vec(i));
+      config::set("clk", 1);
+      config::set("en", 1);
+      // config::set_n_to_m("c$arg_0", 0, 8, config::to_bit_vec(i));
+        // config::set_n_to_m("c$arg_1", 0, 8, config::to_bit_vec(i));
         sim.run();
     }
 
