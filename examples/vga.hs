@@ -61,7 +61,8 @@ getPixel bv ida
     where
       bv' = resize (shiftR (bv .&. 1023) 6)
 
-vgaDemo _ =
+
+vgaDemo =
   pixel
 
   where
@@ -74,11 +75,18 @@ vgaDemo _ =
 
 
 
+{-# ANN topEntity
+  (Synthesize
+   { t_name = "vga"
+   , t_inputs = [ PortName "clk"
+                , PortName "rst"
+                , PortName "en" ]
+   , t_output = PortName "pixel"
+   }) #-}
 topEntity
        :: Clock System
        -> Reset System
        -> Enable System
-       -> Signal System (BitVector 1)
        -> Signal System (BitVector 4)
 topEntity = exposeClockResetEnable vgaDemo
 
