@@ -2,6 +2,9 @@
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
 
+#[macro_use]
+pub mod util;
+
 pub mod config;
 pub mod sim;
 
@@ -38,6 +41,7 @@ static LOGGER: SimpleLogger = SimpleLogger;
 /// ENTRY
 
 use clap::{crate_version, App, Arg};
+use crate::util::*;
 
 fn main() {
 
@@ -69,10 +73,10 @@ fn main() {
         //     i = 4;
         // }
 
-      config::set("clk", 1);
-      config::set("en", 1);
-      // config::set_n_to_m("c$arg_0", 0, 8, config::to_bit_vec(i));
-        // config::set_n_to_m("c$arg_1", 0, 8, config::to_bit_vec(i));
+      set("clk", 1);
+      set("en", 1);
+      // set_n_to_m("c$arg_0", 0, 8, config::to_bit_vec(i));
+        // set_n_to_m("c$arg_1", 0, 8, config::to_bit_vec(i));
         sim.run();
     }
 

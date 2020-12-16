@@ -62,12 +62,16 @@ static LOGGER: WebLogger = WebLogger;
 
 /// ENTRY
 
+#[macro_use]
+pub mod util;
 pub mod config;
 pub mod sim;
 pub mod graphics;
 
+use crate::util::*;
+
 fn run() {
-    info!("run start");
+    trace!("run start");
 
     let config_data =
 r#".model vga
@@ -424,12 +428,12 @@ r#".model vga
     let g = f.clone();
 
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-        // info!("frame request: {:?}", graphics::FRAME);
+        // trace!("frame request: {:?}", graphics::FRAME);
 
         // this is safe since buffer size is always within modified bounds
-        for _ in 0..801 {
-            config::set("clk", 1);
-            config::set("en", 1);
+        for _ in 0..801*524 {
+            set("clk", 1);
+            set("en", 1);
             sim.run();
             unsafe {graphics::test_render();}
         }

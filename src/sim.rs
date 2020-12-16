@@ -16,7 +16,7 @@ impl Simulation {
             models.push(m.order());
         }
 
-        info!("{:#?}", models[0]);
+        trace!("{:#?}", models[0]);
         Simulation{ models: models }
     }
 

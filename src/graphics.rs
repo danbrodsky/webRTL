@@ -8,8 +8,7 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen::Clamped;
 use web_sys::{CanvasRenderingContext2d, ImageData};
 use core::sync::atomic::{ AtomicUsize, Ordering};
-use crate::config;
-use config::*;
+use crate::util::*;
 
 const VGA_WIDTH: usize = 640+161;
 const VGA_HEIGHT: usize = 480+44;
@@ -32,7 +31,7 @@ pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
 // this is safe since buffer size is always within modified bounds
 pub unsafe fn test_render() {
     let f = FRAME.fetch_add(1, Ordering::Relaxed) as usize;
-    let px = config::get_n_to_m("pixel", 0, 4);
+    let px = get_n_to_m("pixel", 0, 4);
     // warn!("{:#?}", px);
 
     let mut color = 0xFF_00_00_00;

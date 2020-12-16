@@ -11,59 +11,11 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use std::mem;
 use core::fmt::Debug;
+use crate::util::*;
 
 lazy_static! {
     /// Stores the current state of all signals
     pub static ref STATE: Mutex<HashMap<String, Var>> = Mutex::new(HashMap::new());
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-// TODO: move to util.rs
-
-#[macro_export]
-macro_rules! get {
-    ( $mv: expr ) => {
-        STATE.lock().unwrap().get($mv).unwrap()
-    };
-}
-
-pub fn get_n_to_m(var: &str, n: usize, m: usize) -> Vec<u8> {
-    let s = STATE.lock().unwrap();
-    let mut out = vec!();
-    for b in n..m {
-        out.push(s.get(&format!("{}[{}]", var, b)).unwrap().val)
-    }
-    return out
-}
-
-// TODO: check that var being set is Model Input
-pub fn set(var: &str, val: u8) {
-    STATE.lock().unwrap().get_mut(var.into()).unwrap().val = val;
-}
-
-pub fn set_n(var: &str, n: usize, val: u8) {
-    STATE.lock().unwrap().get_mut(&format!("{}[{}]", var, n)).unwrap().val = val;
-}
-
-pub fn set_n_to_m(var: &str, n: usize, m: usize, val: Vec<u8>) {
-
-    // info!("setting {} to val {:#?}", var, val);
-    for b in n..m {
-        STATE.lock().unwrap().get_mut(&format!("{}[{}]", var, b)).unwrap().val = val[b-n];
-    }
-}
-
-// TODO: make this generic?
-pub fn to_bit_vec(v: u64) -> Vec<u8> {
-    let mut bv: Vec<u8> = vec!();
-    let mut n = v;
-    for _ in 0..64 {
-        bv.push((n & 0x1) as u8);
-        n = n >> 0x1;
-    }
-    bv
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -114,7 +66,7 @@ impl LUT {
         match self.mappings.get(&signals) {
             Some(&v) => {
                 set(&self.output.name, v);
-                info!("{} set to high", self.output.name);
+                trace!("{} set to high", self.output.name);
             },
             None => {
                 set(&self.output.name, 0);
@@ -169,7 +121,7 @@ impl Register {
 
     fn exec(&self) {
         // TODO: handle varying clock triggers if possible
-        info!("{} set to {}", self.output.name, get!(&self.input[0].name).val);
+        trace!("{} set to {}", self.output.name, get!(&self.input[0].name).val);
         let state = STATE.lock().unwrap();
         let val = state.get(&self.input[0].name).unwrap().val;
         mem::drop(state);
@@ -180,9 +132,9 @@ impl Register {
 /// Basic signal in design, holds only metadata while value is in STATE
 #[derive(Debug, Eq, PartialEq, Clone, Default)]
 pub struct Var  {
-    name: String,
-    val: u8,
-    src: usize
+    pub name: String,
+    pub val: u8,
+    pub src: usize
 }
 
 impl Var {
@@ -269,7 +221,7 @@ impl Model {
         while !seen_vars.is_empty() {
 
             let v = seen_vars.remove(0);
-            info!("{:#?}", seen_vars);
+            trace!("{:#?}", seen_vars);
 
             for i in 0..elements.len() {
                 match &elements[i] {
@@ -316,7 +268,7 @@ impl Model {
 
         // TODO: check if this get compiled in when debug is disabled
         for out in &self.outputs {
-            info!("output '{o}' value: {:#?}", STATE.lock().unwrap().get(&out.name).unwrap(),
+            trace!("output '{o}' value: {:#?}", STATE.lock().unwrap().get(&out.name).unwrap(),
                   o=out.name);
         }
         // clear all input signals
@@ -350,12 +302,12 @@ impl Config {
                 Some(m) => models.push(m),
                 None => {
                     let g = garbage_line(input).unwrap();
-                    info!("line could not be parsed, skipping: {}", g.1);
+                    trace!("line could not be parsed, skipping: {}", g.1);
                     input = g.0;
                 }
             };
         }
-        info!("Parsed configuration: {:#?}", models);
+        trace!("Parsed configuration: {:#?}", models);
         models
     }
 }
