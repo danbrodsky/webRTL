@@ -197,6 +197,11 @@ impl Model {
     // TODO: Implement place and route for FPGA memory
     // https://www.eng.uwo.ca/people/wwang/ece616a/616_extra/notes_web/5_dphysicaldesign.pdf
     /// Crappy Topological sort implementation because too lazy to match a real FPGA
+    /// (For now)
+    ///
+    /// Matches the dependency ordering of an FPGA's BLE, but does not contain
+    /// any logic related to level ordering for finding individually parallelizable
+    /// groups of BLEs.
     pub fn order(mut self) -> Self {
 
         let mut sorted_element_idx: Vec<usize> = vec!();
@@ -260,6 +265,16 @@ impl Model {
         self
 
     }
+
+    // TODO: this method is for generating groupings by dependency of the BLEs
+    // The idea here would be to repeat toposort but create levels i=0..N, where
+    // each level i has no BLEs dependent on levels > i. Tossing these into a
+    // compute shader will yield a partial parallelization similar to that of
+    // a real FPGA.
+    pub fn group() {
+        panic!("Not implemented!");
+    }
+
 
     pub fn eval(&self) {
         for e in &self.elements {
