@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "serve": "webpack-dev-server"
+  },
+  "dependencies": {
+    "divein": "^0.1.0",
+    "pako": "^2.0.2",
+    "wasm-flate": "^1.0.2-browser"
+  },
+  "devDependencies": {
+    "webpack": "^4.25.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.1.10"
+  }
+}
