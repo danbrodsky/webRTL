@@ -12,13 +12,16 @@ use crate::util::*;
 
 const VGA_WIDTH: usize = 640+161;
 const VGA_HEIGHT: usize = 480+44;
-const VGA_BUFFER_SIZE: usize = VGA_WIDTH * VGA_HEIGHT;
+pub const VGA_BUFFER_SIZE: usize = VGA_WIDTH * VGA_HEIGHT;
+pub const FRAME_CACHE_SIZE: usize = 1;
 
+pub type FrameBuffer = [u32; VGA_BUFFER_SIZE];
 
 pub static FRAME: AtomicUsize = AtomicUsize::new(0);
-//pub static POS_X: AtomicU32 = AtomicU32::new(0);
-//pub static POS_Y: AtomicU32 = AtomicU32::new(0);
-pub static mut BUFFER: [u32; VGA_BUFFER_SIZE] = [0; VGA_BUFFER_SIZE];
+pub static mut BUFFER: FrameBuffer = [0; VGA_BUFFER_SIZE];
+
+pub static mut FRAME_CACHE: [FrameBuffer; FRAME_CACHE_SIZE] = [[0; VGA_BUFFER_SIZE]; FRAME_CACHE_SIZE];
+
 
 pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
     web_sys::window()
@@ -28,11 +31,10 @@ pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
 }
 
 
-// this is safe since buffer size is always within modified bounds
+// TODO: change buffer to be passed in so no need for unsafe
 pub unsafe fn test_render() {
     let f = FRAME.fetch_add(1, Ordering::Relaxed) as usize;
     let px = get_n_to_m("pixel", 0, 4);
-    // warn!("{:#?}", px);
 
     let mut color = 0xFF_00_00_00;
     for i in 0..3 {
@@ -42,15 +44,30 @@ pub unsafe fn test_render() {
     }
     // warn!("{:#?}", color);
     BUFFER[f] = color;
+    BUFFER[f+1] = color;
 
     FRAME.compare_and_swap(VGA_BUFFER_SIZE, 0, Ordering::Relaxed);
 
-    // for y in 0..VGA_HEIGHT {
-    //     for x in 0..VGA_WIDTH {
-    //         BUFFER[y * VGA_WIDTH + x] = color
-    //             // f.wrapping_add((x^y) as u32) | 0xFF_00_00_00;
+    // for y in 0..vga_height {
+    //     for x in 0..vga_width {
+    //         buffer[y * vga_width + x] = color
+    //             // f.wrapping_add((x^y) as u32) | 0xff_00_00_00;
     //     }
     // }
+}
+
+pub fn render_next() {
+    let f = FRAME.fetch_add(1, Ordering::Relaxed) as usize;
+    for y in 0..VGA_HEIGHT {
+        for x in 0..VGA_WIDTH {
+            unsafe {
+            BUFFER[y * VGA_WIDTH + x] = FRAME_CACHE[f][y * VGA_WIDTH + x]
+            };
+        }
+    }
+
+    FRAME.compare_and_swap(FRAME_CACHE_SIZE, 0, Ordering::Relaxed);
+
 }
 
 pub fn draw(

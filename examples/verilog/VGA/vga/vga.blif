@@ -3,221 +3,512 @@
 .model vga
 .inputs clk rst en
 .outputs pixel[0] pixel[1] pixel[2] pixel[3]
-.names hvSync[0] $abc$1349$new_n55_ rst $abc$1164$procdff$37.NEXT_Q[0]
+.names $abc$1349$hvSync[0] $abc$1349$new_n55_ $abc$1349$rst $abc$1349$abc$1164$procdff$37.NEXT_Q[0]
 010 1
 100 1
-.names $abc$1349$new_n58_ $abc$1349$new_n57_ $abc$1349$new_n56_ $abc$1349$new_n55_
+.names $abc$1349$en $abc$1349$hvSync[18] $abc$1349$hvSync[19] $abc$1349$new_n56_ $abc$1349$new_n55_
+1111 1
+.names $abc$1349$hvSync[15] $abc$1349$hvSync[17] $abc$1349$hvSync[16] $abc$1349$hvSync[14] $abc$1349$hvSync[12] $abc$1349$hvSync[13] $abc$1349$hvSync[10] $abc$1349$hvSync[11] $abc$1349$new_n56_
+10000000 1
+.names $abc$1349$hvSync[1] $abc$1349$new_n58_ $abc$1349$hvSync[0] $abc$1349$new_n55_ $abc$1349$abc$1164$procdff$37.NEXT_Q[1]
+0011 1
+1000 1
+1001 1
+1010 1
+.names $abc$1349$rst $abc$1349$new_n60_ $abc$1349$new_n59_ $abc$1349$en $abc$1349$hvSync[18] $abc$1349$hvSync[19] $abc$1349$new_n56_ $abc$1349$new_n58_
+0111111 1
+1000000 1
+1000001 1
+1000010 1
+1000011 1
+1000100 1
+1000101 1
+1000110 1
+1000111 1
+1001000 1
+1001001 1
+1001010 1
+1001011 1
+1001100 1
+1001101 1
+1001110 1
+1001111 1
+1010000 1
+1010001 1
+1010010 1
+1010011 1
+1010100 1
+1010101 1
+1010110 1
+1010111 1
+1011000 1
+1011001 1
+1011010 1
+1011011 1
+1011100 1
+1011101 1
+1011110 1
+1011111 1
+1100000 1
+1100001 1
+1100010 1
+1100011 1
+1100100 1
+1100101 1
+1100110 1
+1100111 1
+1101000 1
+1101001 1
+1101010 1
+1101011 1
+1101100 1
+1101101 1
+1101110 1
+1101111 1
+1110000 1
+1110001 1
+1110010 1
+1110011 1
+1110100 1
+1110101 1
+1110110 1
+1110111 1
+1111000 1
+1111001 1
+1111010 1
+1111011 1
+1111100 1
+1111101 1
+1111110 1
+1111111 1
+.names $abc$1349$hvSync[2] $abc$1349$hvSync[3] $abc$1349$hvSync[0] $abc$1349$new_n59_
 111 1
-.names en hvSync[18] hvSync[19] $abc$1349$new_n56_
-111 1
-.names hvSync[15] hvSync[17] hvSync[16] hvSync[14] $abc$1349$new_n57_
-1000 1
-.names hvSync[12] hvSync[13] hvSync[10] hvSync[11] $abc$1349$new_n58_
-0000 1
-.names hvSync[1] $abc$1349$new_n60_ hvSync[0] $abc$1349$new_n55_ $abc$1164$procdff$37.NEXT_Q[1]
+.names $abc$1349$hvSync[9] $abc$1349$hvSync[8] $abc$1349$hvSync[6] $abc$1349$hvSync[7] $abc$1349$hvSync[4] $abc$1349$hvSync[5] $abc$1349$hvSync[1] $abc$1349$new_n60_
+1000000 1
+.names $abc$1349$hvSync[2] $abc$1349$new_n58_ $abc$1349$hvSync[1] $abc$1349$hvSync[0] $abc$1349$new_n55_ $abc$1349$abc$1164$procdff$37.NEXT_Q[2]
+00111 1
+10000 1
+10001 1
+10010 1
+10011 1
+10100 1
+10101 1
+10110 1
+.names $abc$1349$hvSync[3] $abc$1349$new_n58_ $abc$1349$hvSync[2] $abc$1349$hvSync[1] $abc$1349$hvSync[0] $abc$1349$new_n55_ $abc$1349$abc$1164$procdff$37.NEXT_Q[3]
+001111 1
+100000 1
+100001 1
+100010 1
+100011 1
+100100 1
+100101 1
+100110 1
+100111 1
+101000 1
+101001 1
+101010 1
+101011 1
+101100 1
+101101 1
+101110 1
+.names $abc$1349$hvSync[4] $abc$1349$rst $abc$1349$new_n64_ $abc$1349$new_n55_ $abc$1349$abc$1164$procdff$37.NEXT_Q[4]
 0011 1
 1000 1
 1001 1
 1010 1
-.names rst $abc$1349$new_n67_ $abc$1349$new_n65_ $abc$1349$new_n61_ $abc$1349$new_n60_
-0111 1
-1000 1
-1001 1
-1010 1
-1011 1
-1100 1
-1101 1
-1110 1
+.names $abc$1349$hvSync[2] $abc$1349$hvSync[3] $abc$1349$hvSync[1] $abc$1349$hvSync[0] $abc$1349$new_n64_
 1111 1
-.names en $abc$1349$new_n64_ $abc$1349$new_n63_ $abc$1349$new_n62_ $abc$1349$new_n61_
-1111 1
-.names hvSync[14] hvSync[12] $abc$1349$new_n62_
-00 1
-.names hvSync[18] hvSync[19] hvSync[17] hvSync[16] $abc$1349$new_n63_
-1100 1
-.names hvSync[15] hvSync[13] hvSync[10] hvSync[11] $abc$1349$new_n64_
-1000 1
-.names hvSync[2] hvSync[3] hvSync[0] $abc$1349$new_n66_ $abc$1349$new_n65_
-1111 1
-.names hvSync[9] hvSync[8] hvSync[7] hvSync[1] $abc$1349$new_n66_
-1000 1
-.names hvSync[6] hvSync[4] hvSync[5] $abc$1349$new_n67_
-000 1
-.names $abc$1349$new_n69_ $abc$1349$new_n60_ $abc$1164$procdff$37.NEXT_Q[2]
-10 1
-.names hvSync[2] hvSync[1] hvSync[0] $abc$1349$new_n61_ $abc$1349$new_n69_
-0111 1
-1000 1
-1001 1
-1010 1
-1011 1
-1100 1
-1101 1
-1110 1
-.names $abc$1349$new_n71_ hvSync[3] $abc$1349$new_n60_ $abc$1164$procdff$37.NEXT_Q[3]
-010 1
-100 1
-.names hvSync[2] hvSync[1] hvSync[0] $abc$1349$new_n55_ $abc$1349$new_n71_
-1111 1
-.names $abc$1349$new_n73_ $abc$1349$new_n61_ $abc$1349$new_n72_
-11 1
-.names hvSync[2] hvSync[3] hvSync[1] hvSync[0] $abc$1349$new_n73_
-1111 1
-.names hvSync[4] $abc$1349$new_n72_ rst $abc$1164$procdff$37.NEXT_Q[4]
-010 1
-100 1
-.names hvSync[5] $abc$1349$new_n76_ rst $abc$1164$procdff$37.NEXT_Q[5]
-010 1
-100 1
-.names hvSync[4] $abc$1349$new_n73_ $abc$1349$new_n61_ $abc$1349$new_n76_
-111 1
-.names hvSync[6] rst hvSync[5] $abc$1349$new_n76_ $abc$1164$procdff$37.NEXT_Q[6]
-0011 1
-1000 1
-1001 1
-1010 1
-.names hvSync[7] $abc$1349$new_n79_ rst $abc$1164$procdff$37.NEXT_Q[7]
-010 1
-100 1
-.names hvSync[4] $abc$1349$new_n80_ $abc$1349$new_n73_ $abc$1349$new_n55_ $abc$1349$new_n79_
-1111 1
-.names hvSync[6] hvSync[5] $abc$1349$new_n80_
-11 1
-.names hvSync[8] rst $abc$1349$new_n79_ hvSync[7] $abc$1164$procdff$37.NEXT_Q[8]
-0011 1
-1000 1
-1001 1
-1010 1
-.names rst $abc$1349$new_n58_ $abc$1349$new_n57_ $abc$1349$new_n56_ $abc$1349$new_n83_
-0000 1
-0001 1
-0010 1
-0011 1
+.names $abc$1349$hvSync[5] $abc$1349$rst $abc$1349$hvSync[4] $abc$1349$new_n64_ $abc$1349$new_n55_ $abc$1349$abc$1164$procdff$37.NEXT_Q[5]
+00111 1
+10000 1
+10001 1
+10010 1
+10011 1
+10100 1
+10101 1
+10110 1
+.names $abc$1349$hvSync[6] $abc$1349$rst $abc$1349$hvSync[4] $abc$1349$hvSync[5] $abc$1349$new_n64_ $abc$1349$new_n55_ $abc$1349$abc$1164$procdff$37.NEXT_Q[6]
+001111 1
+100000 1
+100001 1
+100010 1
+100011 1
+100100 1
+100101 1
+100110 1
+100111 1
+101000 1
+101001 1
+101010 1
+101011 1
+101100 1
+101101 1
+101110 1
+.names $abc$1349$hvSync[7] $abc$1349$rst $abc$1349$hvSync[6] $abc$1349$hvSync[4] $abc$1349$hvSync[5] $abc$1349$new_n64_ $abc$1349$new_n55_ $abc$1349$abc$1164$procdff$37.NEXT_Q[7]
+0011111 1
+1000000 1
+1000001 1
+1000010 1
+1000011 1
+1000100 1
+1000101 1
+1000110 1
+1000111 1
+1001000 1
+1001001 1
+1001010 1
+1001011 1
+1001100 1
+1001101 1
+1001110 1
+1001111 1
+1010000 1
+1010001 1
+1010010 1
+1010011 1
+1010100 1
+1010101 1
+1010110 1
+1010111 1
+1011000 1
+1011001 1
+1011010 1
+1011011 1
+1011100 1
+1011101 1
+1011110 1
+.names $abc$1349$new_n69_ $abc$1349$hvSync[8] $abc$1349$hvSync[5] $abc$1349$new_n64_ $abc$1349$new_n55_ $abc$1349$hvSync[6] $abc$1349$hvSync[7] $abc$1349$hvSync[4] $abc$1349$abc$1164$procdff$37.NEXT_Q[8]
+00111111 1
+01000000 1
+01000001 1
+01000010 1
+01000011 1
+01000100 1
+01000101 1
+01000110 1
+01000111 1
+01001000 1
+01001001 1
+01001010 1
+01001011 1
+01001100 1
+01001101 1
+01001110 1
+01001111 1
+01010000 1
+01010001 1
+01010010 1
+01010011 1
+01010100 1
+01010101 1
+01010110 1
+01010111 1
+01011000 1
+01011001 1
+01011010 1
+01011011 1
+01011100 1
+01011101 1
+01011110 1
+01011111 1
+01100000 1
+01100001 1
+01100010 1
+01100011 1
+01100100 1
+01100101 1
+01100110 1
+01100111 1
+01101000 1
+01101001 1
+01101010 1
+01101011 1
+01101100 1
+01101101 1
+01101110 1
+01101111 1
+01110000 1
+01110001 1
+01110010 1
+01110011 1
+01110100 1
+01110101 1
+01110110 1
+01110111 1
+01111000 1
+01111001 1
+01111010 1
+01111011 1
+01111100 1
+01111101 1
+01111110 1
+01111111 1
+.names $abc$1349$rst $abc$1349$new_n70_ $abc$1349$new_n64_ $abc$1349$en $abc$1349$hvSync[18] $abc$1349$hvSync[19] $abc$1349$new_n56_ $abc$1349$new_n69_
+0111111 1
+1000000 1
+1000001 1
+1000010 1
+1000011 1
+1000100 1
+1000101 1
+1000110 1
+1000111 1
+1001000 1
+1001001 1
+1001010 1
+1001011 1
+1001100 1
+1001101 1
+1001110 1
+1001111 1
+1010000 1
+1010001 1
+1010010 1
+1010011 1
+1010100 1
+1010101 1
+1010110 1
+1010111 1
+1011000 1
+1011001 1
+1011010 1
+1011011 1
+1011100 1
+1011101 1
+1011110 1
+1011111 1
+1100000 1
+1100001 1
+1100010 1
+1100011 1
+1100100 1
+1100101 1
+1100110 1
+1100111 1
+1101000 1
+1101001 1
+1101010 1
+1101011 1
+1101100 1
+1101101 1
+1101110 1
+1101111 1
+1110000 1
+1110001 1
+1110010 1
+1110011 1
+1110100 1
+1110101 1
+1110110 1
+1110111 1
+1111000 1
+1111001 1
+1111010 1
+1111011 1
+1111100 1
+1111101 1
+1111110 1
+1111111 1
+.names $abc$1349$hvSync[8] $abc$1349$hvSync[6] $abc$1349$hvSync[7] $abc$1349$hvSync[4] $abc$1349$hvSync[5] $abc$1349$new_n70_
+11111 1
+.names $abc$1349$hvSync[9] $abc$1349$new_n58_ $abc$1349$new_n70_ $abc$1349$new_n64_ $abc$1349$new_n55_ $abc$1349$abc$1164$procdff$37.NEXT_Q[9]
+00111 1
+10000 1
+10001 1
+10010 1
+10011 1
+10100 1
+10101 1
+10110 1
+.names $abc$1349$en $abc$1349$hvSync[10] $abc$1349$rst $abc$1349$new_n55_ $abc$1349$abc$1164$procdff$37.NEXT_Q[10]
 0100 1
-0101 1
-0110 1
-.names hvSync[8] hvSync[7] hvSync[4] $abc$1349$new_n80_ $abc$1349$new_n84_
-1111 1
-.names hvSync[9] $abc$1349$new_n86_ $abc$1349$new_n60_ $abc$1164$procdff$37.NEXT_Q[9]
-010 1
-100 1
-.names $abc$1349$new_n73_ $abc$1349$new_n84_ $abc$1349$new_n55_ $abc$1349$new_n86_
-111 1
-.names $abc$1349$new_n83_ en hvSync[10] $abc$1164$procdff$37.NEXT_Q[10]
-101 1
-110 1
-.names hvSync[11] $abc$1349$new_n89_ rst $abc$1164$procdff$37.NEXT_Q[11]
-010 1
-100 1
-.names en hvSync[10] $abc$1349$new_n89_
-11 1
-.names hvSync[12] rst hvSync[11] $abc$1349$new_n89_ $abc$1164$procdff$37.NEXT_Q[12]
+1000 1
+.names $abc$1349$hvSync[11] $abc$1349$rst $abc$1349$en $abc$1349$hvSync[10] $abc$1349$abc$1164$procdff$37.NEXT_Q[11]
 0011 1
 1000 1
 1001 1
 1010 1
-.names hvSync[13] $abc$1349$new_n92_ rst $abc$1164$procdff$37.NEXT_Q[13]
+.names $abc$1349$hvSync[12] $abc$1349$rst $abc$1349$en $abc$1349$hvSync[10] $abc$1349$hvSync[11] $abc$1349$abc$1164$procdff$37.NEXT_Q[12]
+00111 1
+10000 1
+10001 1
+10010 1
+10011 1
+10100 1
+10101 1
+10110 1
+.names $abc$1349$hvSync[13] $abc$1349$rst $abc$1349$en $abc$1349$hvSync[12] $abc$1349$hvSync[10] $abc$1349$hvSync[11] $abc$1349$abc$1164$procdff$37.NEXT_Q[13]
+001111 1
+100000 1
+100001 1
+100010 1
+100011 1
+100100 1
+100101 1
+100110 1
+100111 1
+101000 1
+101001 1
+101010 1
+101011 1
+101100 1
+101101 1
+101110 1
+.names $abc$1349$hvSync[14] $abc$1349$new_n77_ $abc$1349$rst $abc$1349$abc$1164$procdff$37.NEXT_Q[14]
 010 1
 100 1
-.names hvSync[12] hvSync[11] $abc$1349$new_n89_ $abc$1349$new_n92_
+.names $abc$1349$en $abc$1349$hvSync[12] $abc$1349$hvSync[13] $abc$1349$hvSync[10] $abc$1349$hvSync[11] $abc$1349$new_n77_
+11111 1
+.names $abc$1349$hvSync[15] $abc$1349$new_n55_ $abc$1349$rst $abc$1349$hvSync[14] $abc$1349$new_n77_ $abc$1349$abc$1164$procdff$37.NEXT_Q[15]
+00011 1
+10000 1
+10001 1
+10010 1
+.names $abc$1349$hvSync[16] $abc$1349$new_n80_ $abc$1349$rst $abc$1349$abc$1164$procdff$37.NEXT_Q[16]
+010 1
+100 1
+.names $abc$1349$hvSync[15] $abc$1349$hvSync[14] $abc$1349$new_n77_ $abc$1349$new_n80_
 111 1
-.names hvSync[14] $abc$1349$new_n94_ rst $abc$1164$procdff$37.NEXT_Q[14]
-010 1
-100 1
-.names hvSync[12] hvSync[13] hvSync[11] $abc$1349$new_n89_ $abc$1349$new_n94_
-1111 1
-.names $abc$1349$new_n83_ hvSync[15] hvSync[14] $abc$1349$new_n94_ $abc$1164$procdff$37.NEXT_Q[15]
-1011 1
-1100 1
-1101 1
-1110 1
-.names hvSync[16] $abc$1349$new_n97_ rst $abc$1164$procdff$37.NEXT_Q[16]
-010 1
-100 1
-.names hvSync[15] hvSync[14] $abc$1349$new_n94_ $abc$1349$new_n97_
-111 1
-.names hvSync[17] $abc$1349$new_n99_ rst $abc$1164$procdff$37.NEXT_Q[17]
-010 1
-100 1
-.names hvSync[16] hvSync[15] hvSync[14] $abc$1349$new_n94_ $abc$1349$new_n99_
-1111 1
-.names $abc$1349$new_n83_ hvSync[18] $abc$1349$new_n101_ $abc$1164$procdff$37.NEXT_Q[18]
-101 1
-110 1
-.names hvSync[15] hvSync[14] $abc$1349$new_n102_ $abc$1349$new_n94_ $abc$1349$new_n101_
-1111 1
-.names hvSync[17] hvSync[16] $abc$1349$new_n102_
-11 1
-.names $abc$1349$new_n83_ hvSync[19] hvSync[18] $abc$1349$new_n101_ $abc$1164$procdff$37.NEXT_Q[19]
-1011 1
-1100 1
-1101 1
-1110 1
-.names en rst $abc$1349$new_n105_ hvSync[20] $abc$1164$procdff$37.NEXT_Q[20]
+.names $abc$1349$hvSync[17] $abc$1349$rst $abc$1349$hvSync[16] $abc$1349$new_n80_ $abc$1349$abc$1164$procdff$37.NEXT_Q[17]
+0011 1
+1000 1
+1001 1
+1010 1
+.names $abc$1349$hvSync[18] $abc$1349$rst $abc$1349$new_n55_ $abc$1349$hvSync[17] $abc$1349$hvSync[16] $abc$1349$new_n80_ $abc$1349$abc$1164$procdff$37.NEXT_Q[18]
+000111 1
+100000 1
+100001 1
+100010 1
+100011 1
+100100 1
+100101 1
+100110 1
+.names $abc$1349$hvSync[19] $abc$1349$new_n55_ $abc$1349$rst $abc$1349$hvSync[18] $abc$1349$hvSync[17] $abc$1349$hvSync[16] $abc$1349$new_n80_ $abc$1349$abc$1164$procdff$37.NEXT_Q[19]
+0001111 1
+1000000 1
+1000001 1
+1000010 1
+1000011 1
+1000100 1
+1000101 1
+1000110 1
+1000111 1
+1001000 1
+1001001 1
+1001010 1
+1001011 1
+1001100 1
+1001101 1
+1001110 1
+.names $abc$1349$en $abc$1349$rst $abc$1349$new_n85_ $abc$1349$hvSync[20] $abc$1349$abc$1164$procdff$37.NEXT_Q[20]
 0001 1
 0011 1
 1010 1
 1011 1
-.names hvSync[9] $abc$1349$new_n107_ $abc$1349$new_n106_ $abc$1349$new_n105_
-000 1
-.names hvSync[8] hvSync[7] $abc$1349$new_n80_ $abc$1349$new_n106_
-111 1
-.names hvSync[19] hvSync[17] hvSync[18] $abc$1349$new_n107_
-101 1
-110 1
-111 1
-.names rst $abc$1349$new_n109_ $abc$1164$procdff$38.NEXT_Q[0]
-00 1
-.names en result[0] hvSync[16] hvSync[20] $abc$1349$new_n109_
-0000 1
-0001 1
-0010 1
-0011 1
-1000 1
-1001 1
-1010 1
-1100 1
-1101 1
-1110 1
-.names rst $abc$1349$new_n111_ $abc$1164$procdff$38.NEXT_Q[1]
-00 1
-.names en result[1] hvSync[17] hvSync[20] $abc$1349$new_n111_
-0000 1
-0001 1
-0010 1
-0011 1
-1000 1
-1001 1
-1010 1
-1100 1
-1101 1
-1110 1
-.names rst $abc$1349$new_n113_ $abc$1164$procdff$38.NEXT_Q[2]
-00 1
-.names en result[2] hvSync[18] hvSync[20] $abc$1349$new_n113_
-0000 1
-0001 1
-0010 1
-0011 1
-1000 1
-1001 1
-1010 1
-1100 1
-1101 1
-1110 1
-.names rst $abc$1349$new_n115_ $abc$1164$procdff$38.NEXT_Q[3]
-00 1
-.names en result[3] hvSync[19] hvSync[20] $abc$1349$new_n115_
-0000 1
-0001 1
-0010 1
-0011 1
-1000 1
-1001 1
-1010 1
-1100 1
-1101 1
-1110 1
+.names $abc$1349$hvSync[19] $abc$1349$hvSync[9] $abc$1349$hvSync[17] $abc$1349$hvSync[18] $abc$1349$hvSync[6] $abc$1349$hvSync[7] $abc$1349$hvSync[5] $abc$1349$hvSync[8] $abc$1349$new_n85_
+00000000 1
+00000001 1
+00000010 1
+00000011 1
+00000100 1
+00000101 1
+00000110 1
+00000111 1
+00001000 1
+00001001 1
+00001010 1
+00001011 1
+00001100 1
+00001101 1
+00001110 1
+00010000 1
+00010001 1
+00010010 1
+00010011 1
+00010100 1
+00010101 1
+00010110 1
+00010111 1
+00011000 1
+00011001 1
+00011010 1
+00011011 1
+00011100 1
+00011101 1
+00011110 1
+00100000 1
+00100001 1
+00100010 1
+00100011 1
+00100100 1
+00100101 1
+00100110 1
+00100111 1
+00101000 1
+00101001 1
+00101010 1
+00101011 1
+00101100 1
+00101101 1
+00101110 1
+00110000 1
+00110001 1
+00110010 1
+00110011 1
+00110100 1
+00110101 1
+00110110 1
+00110111 1
+00111000 1
+00111001 1
+00111010 1
+00111011 1
+00111100 1
+00111101 1
+00111110 1
+10000000 1
+10000001 1
+10000010 1
+10000011 1
+10000100 1
+10000101 1
+10000110 1
+10000111 1
+10001000 1
+10001001 1
+10001010 1
+10001011 1
+10001100 1
+10001101 1
+10001110 1
+.names $abc$1349$en $abc$1349$rst $abc$1349$result[0] $abc$1349$hvSync[20] $abc$1349$hvSync[16] $abc$1349$abc$1164$procdff$38.NEXT_Q[0]
+00100 1
+00101 1
+00110 1
+00111 1
+10011 1
+10111 1
+.names $abc$1349$en $abc$1349$rst $abc$1349$result[1] $abc$1349$hvSync[20] $abc$1349$hvSync[17] $abc$1349$abc$1164$procdff$38.NEXT_Q[1]
+00100 1
+00101 1
+00110 1
+00111 1
+10011 1
+10111 1
+.names $abc$1349$en $abc$1349$rst $abc$1349$result[2] $abc$1349$hvSync[20] $abc$1349$hvSync[18] $abc$1349$abc$1164$procdff$38.NEXT_Q[2]
+00100 1
+00101 1
+00110 1
+00111 1
+10011 1
+10111 1
+.names $abc$1349$en $abc$1349$rst $abc$1349$result[3] $abc$1349$hvSync[20] $abc$1349$hvSync[19] $abc$1349$abc$1164$procdff$38.NEXT_Q[3]
+00100 1
+00101 1
+00110 1
+00111 1
+10011 1
+10111 1
 .latch $abc$1164$procdff$37.NEXT_Q[0] hvSync[0] re clk 0
 .latch $abc$1164$procdff$37.NEXT_Q[1] hvSync[1] re clk 0
 .latch $abc$1164$procdff$37.NEXT_Q[2] hvSync[2] re clk 0
@@ -328,5 +619,109 @@
 .names result[2] pixel[2]
 1 1
 .names result[3] pixel[3]
+1 1
+.names rst $abc$1349$rst
+1 1
+.names hvSync[0] $abc$1349$hvSync[0]
+1 1
+.names hvSync[1] $abc$1349$hvSync[1]
+1 1
+.names hvSync[3] $abc$1349$hvSync[3]
+1 1
+.names hvSync[2] $abc$1349$hvSync[2]
+1 1
+.names hvSync[5] $abc$1349$hvSync[5]
+1 1
+.names hvSync[4] $abc$1349$hvSync[4]
+1 1
+.names hvSync[7] $abc$1349$hvSync[7]
+1 1
+.names hvSync[6] $abc$1349$hvSync[6]
+1 1
+.names hvSync[8] $abc$1349$hvSync[8]
+1 1
+.names hvSync[9] $abc$1349$hvSync[9]
+1 1
+.names hvSync[11] $abc$1349$hvSync[11]
+1 1
+.names hvSync[10] $abc$1349$hvSync[10]
+1 1
+.names hvSync[13] $abc$1349$hvSync[13]
+1 1
+.names hvSync[12] $abc$1349$hvSync[12]
+1 1
+.names hvSync[14] $abc$1349$hvSync[14]
+1 1
+.names hvSync[15] $abc$1349$hvSync[15]
+1 1
+.names hvSync[16] $abc$1349$hvSync[16]
+1 1
+.names hvSync[17] $abc$1349$hvSync[17]
+1 1
+.names hvSync[19] $abc$1349$hvSync[19]
+1 1
+.names hvSync[18] $abc$1349$hvSync[18]
+1 1
+.names en $abc$1349$en
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[0] $abc$1164$procdff$37.NEXT_Q[0]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[1] $abc$1164$procdff$37.NEXT_Q[1]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[2] $abc$1164$procdff$37.NEXT_Q[2]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[3] $abc$1164$procdff$37.NEXT_Q[3]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[4] $abc$1164$procdff$37.NEXT_Q[4]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[5] $abc$1164$procdff$37.NEXT_Q[5]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[6] $abc$1164$procdff$37.NEXT_Q[6]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[7] $abc$1164$procdff$37.NEXT_Q[7]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[8] $abc$1164$procdff$37.NEXT_Q[8]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[9] $abc$1164$procdff$37.NEXT_Q[9]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[10] $abc$1164$procdff$37.NEXT_Q[10]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[11] $abc$1164$procdff$37.NEXT_Q[11]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[12] $abc$1164$procdff$37.NEXT_Q[12]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[13] $abc$1164$procdff$37.NEXT_Q[13]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[14] $abc$1164$procdff$37.NEXT_Q[14]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[15] $abc$1164$procdff$37.NEXT_Q[15]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[16] $abc$1164$procdff$37.NEXT_Q[16]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[17] $abc$1164$procdff$37.NEXT_Q[17]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[18] $abc$1164$procdff$37.NEXT_Q[18]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[19] $abc$1164$procdff$37.NEXT_Q[19]
+1 1
+.names hvSync[20] $abc$1349$hvSync[20]
+1 1
+.names $abc$1349$abc$1164$procdff$37.NEXT_Q[20] $abc$1164$procdff$37.NEXT_Q[20]
+1 1
+.names result[0] $abc$1349$result[0]
+1 1
+.names $abc$1349$abc$1164$procdff$38.NEXT_Q[0] $abc$1164$procdff$38.NEXT_Q[0]
+1 1
+.names result[1] $abc$1349$result[1]
+1 1
+.names $abc$1349$abc$1164$procdff$38.NEXT_Q[1] $abc$1164$procdff$38.NEXT_Q[1]
+1 1
+.names result[2] $abc$1349$result[2]
+1 1
+.names $abc$1349$abc$1164$procdff$38.NEXT_Q[2] $abc$1164$procdff$38.NEXT_Q[2]
+1 1
+.names result[3] $abc$1349$result[3]
+1 1
+.names $abc$1349$abc$1164$procdff$38.NEXT_Q[3] $abc$1164$procdff$38.NEXT_Q[3]
 1 1
 .end

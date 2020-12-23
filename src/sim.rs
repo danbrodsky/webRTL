@@ -10,13 +10,14 @@ pub struct Simulation {
 impl Simulation {
 
     pub fn init(config: Config) -> Self {
+        // info!("{:#?}", config);
         let mut models = vec!();
         info!("creating simulation");
         for m in config.models {
             models.push(m.order());
         }
 
-        trace!("{:#?}", models[0]);
+        // info!("{:#?}", models[0]);
         Simulation{ models: models }
     }
 

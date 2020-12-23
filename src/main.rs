@@ -1,21 +1,24 @@
+#![feature(new_uninit)]
 #[macro_use] extern crate nom;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate log;
+extern crate flate2;
+
 
 #[macro_use]
-pub mod util;
+mod util;
 
-pub mod config;
-pub mod sim;
+mod config;
+mod sim;
 
 /// WASM
 
-use wasm_bindgen::prelude::*;
+// use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-extern {
-    pub fn alert(s: &str);
-}
+// #[wasm_bindgen]
+// extern {
+//     pub fn alert(s: &str);
+// }
 
 struct SimpleLogger;
 
@@ -42,8 +45,19 @@ static LOGGER: SimpleLogger = SimpleLogger;
 
 use clap::{crate_version, App, Arg};
 use crate::util::*;
+use std::fs::File;
+use std::io::prelude::*;
+
+use flate2::Compression;
+use flate2::write::GzEncoder;
+
+mod graphics;
+use crate::graphics::{VGA_BUFFER_SIZE,
+                      FRAME_CACHE_SIZE,
+                      FrameBuffer};
 
 fn main() {
+    print!("allocating frame buffer");
 
     log::set_logger(&LOGGER).unwrap();
     log::set_max_level(LevelFilter::Info);
@@ -65,20 +79,35 @@ fn main() {
 
 
 
-    let mut i = 0;
     sim.run();
-    for _ in 0..640 {
-        // i += 1;
-        // if i > 4 {
-        //     i = 4;
-        // }
+    info!("allocating frame buffer");
+    let frames = Box::<[FrameBuffer; FRAME_CACHE_SIZE]>::new_zeroed();
+    let mut frames = unsafe { frames.assume_init() };
+    info!("allocated frame buffer");
+    for i in 0..FRAME_CACHE_SIZE {
+        for j in 0..VGA_BUFFER_SIZE {
+            set("clk", 1);
+            set("en", 1);
+            sim.run();
 
-      set("clk", 1);
-      set("en", 1);
-      // set_n_to_m("c$arg_0", 0, 8, config::to_bit_vec(i));
-        // set_n_to_m("c$arg_1", 0, 8, config::to_bit_vec(i));
-        sim.run();
+            // TODO: change to match pixel format
+            let px = get_n_to_m("pixel", 0, 4);
+
+            let mut color = 0xFF_00_00_00;
+            for i in 0..3 {
+                if px[i] == 1 {
+                    color |= 0xFF << (i*8);
+                }
+            }
+            // info!("pixel {:x} added", color);
+            frames[i][j] = color;
+        }
     }
+    let (_, u8_frames, _) = unsafe { frames.align_to_mut::<u8>() };
+    let mut enc = GzEncoder::new(Vec::new(), Compression::default());
+    enc.write_all(u8_frames).unwrap();
+    let res = enc.finish().unwrap();
+    let mut file = File::create("test.gz").expect("failed to create file");
+    file.write_all(&res[..]).expect("saving to file failed");
 
-    // TODO: Entry into program
 }

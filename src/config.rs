@@ -226,7 +226,7 @@ impl Model {
         while !seen_vars.is_empty() {
 
             let v = seen_vars.remove(0);
-            trace!("{:#?}", seen_vars);
+            info!("{:#?}", seen_vars);
 
             for i in 0..elements.len() {
                 match &elements[i] {
@@ -294,6 +294,7 @@ impl Model {
 }
 
 /// Entry for getting FPGA configuration
+#[derive(Debug)]
 pub struct Config {
     pub models: Vec<Model>
 }
