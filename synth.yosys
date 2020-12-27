@@ -1,4 +1,4 @@
-read_verilog /tmp/synth.v
+read_verilog ./examples/verilog/Parallax/parallax/parallax.v
 
 hierarchy
 proc
@@ -9,4 +9,4 @@ synth -flatten -auto-top
 abc -lut 4
 clean
 
-write_blif -impltf /tmp/synth.blif
+write_blif -impltf ./examples/verilog/Parallax/parallax/parallax.blif
