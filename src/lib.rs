@@ -81,6 +81,8 @@ fn run(frames: JsValue) {
     let (head, body, _tail) = unsafe { data.align_to::<FrameBuffer>()};
     assert!(head.len() == 0, "mistake when decompressing");
 
+    // assert!(body.len() == 1, "wrong # frames {}", body.len());
+    info!("{}", _tail.len());
     for i in 0..FRAME_CACHE_SIZE {
         unsafe { FRAME_CACHE[i] = body[i] };
     }
@@ -104,6 +106,11 @@ fn run(frames: JsValue) {
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
 
+
+    let t = Rc::new(RefCell::new(None));
+    let tc = f.clone();
+
+    let w = web_sys::window().unwrap();
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
         // info!("frame request: {:?}", graphics::FRAME);
 
@@ -116,11 +123,19 @@ fn run(frames: JsValue) {
         // }
 
 
+        graphics::request_animation_frame(&w, t.borrow().as_ref().unwrap());
+    }) as Box<dyn FnMut()>));
+
+    let w2 = web_sys::window().unwrap();
+    *tc.borrow_mut() = Some(Closure::wrap(Box::new(move || {
         render_next();
         draw(&ctx).expect("failed drawing to screen");
 
-        graphics::request_animation_frame(f.borrow().as_ref().unwrap());
+        set_timeout(&w2,
+            &f.borrow().as_ref().unwrap(),
+            1000 / 1);
+
     }) as Box<dyn FnMut()>));
 
-    graphics::request_animation_frame(g.borrow().as_ref().unwrap());
-}
+        request_animation_frame(&window(), tc.borrow().as_ref().unwrap());
+    }

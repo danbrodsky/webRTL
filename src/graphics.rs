@@ -10,24 +10,34 @@ use web_sys::{CanvasRenderingContext2d, ImageData};
 use core::sync::atomic::{ AtomicUsize, Ordering};
 use crate::util::*;
 
-const VGA_WIDTH: usize = 640+161;
-const VGA_HEIGHT: usize = 480+44;
+const VGA_WIDTH: usize = 320;
+const VGA_HEIGHT: usize = 10;
 pub const VGA_BUFFER_SIZE: usize = VGA_WIDTH * VGA_HEIGHT;
-pub const FRAME_CACHE_SIZE: usize = 1;
+pub const FRAME_CACHE_SIZE: usize = 5;
 
 pub type FrameBuffer = [u32; VGA_BUFFER_SIZE];
 
 pub static FRAME: AtomicUsize = AtomicUsize::new(0);
 pub static mut BUFFER: FrameBuffer = [0; VGA_BUFFER_SIZE];
-
 pub static mut FRAME_CACHE: [FrameBuffer; FRAME_CACHE_SIZE] = [[0; VGA_BUFFER_SIZE]; FRAME_CACHE_SIZE];
 
+pub fn window() -> web_sys::Window {
+    web_sys::window().expect("no global `window` exists")
+}
 
-pub fn request_animation_frame(f: &Closure<dyn FnMut()>) {
-    web_sys::window()
-        .expect("global window not found")
+pub fn request_animation_frame(window: &web_sys::Window, f: &Closure<dyn FnMut()>) -> i32 {
+    window
         .request_animation_frame(f.as_ref().unchecked_ref())
-        .expect("requestAnimationFrame failed to register");
+        .expect("should register `requestAnimationFrame` OK")
+}
+
+pub fn set_timeout(window: &web_sys::Window, f: &Closure<dyn FnMut()>, timeout_ms: i32) -> i32 {
+    window
+        .set_timeout_with_callback_and_timeout_and_arguments_0(
+            f.as_ref().unchecked_ref(),
+            timeout_ms,
+        )
+        .expect("should register `setTimeout` OK")
 }
 
 

@@ -10,15 +10,9 @@ mod util;
 
 mod config;
 mod sim;
+mod graphics;
 
 /// WASM
-
-// use wasm_bindgen::prelude::*;
-
-// #[wasm_bindgen]
-// extern {
-//     pub fn alert(s: &str);
-// }
 
 struct SimpleLogger;
 
@@ -44,17 +38,17 @@ static LOGGER: SimpleLogger = SimpleLogger;
 /// ENTRY
 
 use clap::{crate_version, App, Arg};
-use crate::util::*;
-use std::fs::File;
-use std::io::prelude::*;
 
+use std::fs::{File, remove_file};
+use std::io::prelude::*;
 use flate2::Compression;
 use flate2::write::GzEncoder;
 
-mod graphics;
+use crate::util::*;
 use crate::graphics::{VGA_BUFFER_SIZE,
                       FRAME_CACHE_SIZE,
                       FrameBuffer};
+use crate::config::STATE;
 
 fn main() {
     print!("allocating frame buffer");
@@ -91,23 +85,26 @@ fn main() {
             sim.run();
 
             // TODO: change to match pixel format
-            let px = get_n_to_m("pixel", 0, 4);
+            let px = get_n_to_m("pixel", 0, 32);
 
-            let mut color = 0xFF_00_00_00;
-            for i in 0..3 {
-                if px[i] == 1 {
-                    color |= 0xFF << (i*8);
-                }
-            }
-            // info!("pixel {:x} added", color);
-            frames[i][j] = color;
+            // let mut color = 0xFF_00_00_00;
+            // for i in 0..3 {
+            //     if px[i] == 1 {
+            //         color |= 0xFF << (i*8);
+            //     }
+            // }
+            // if px == 1 {
+            //     color = 0xFF_FF_FF_FF;
+            // }
+            info!("pixel {}, {} added", i, j);
+            frames[i][j] = to_u32(px);
         }
     }
     let (_, u8_frames, _) = unsafe { frames.align_to_mut::<u8>() };
     let mut enc = GzEncoder::new(Vec::new(), Compression::default());
     enc.write_all(u8_frames).unwrap();
     let res = enc.finish().unwrap();
-    let mut file = File::create("test.gz").expect("failed to create file");
+    let mut file = File::create("frames.gz").expect("failed to create file");
     file.write_all(&res[..]).expect("saving to file failed");
 
 }

@@ -328,25 +328,6 @@ impl Config {
     }
 }
 
-
-// TODO:
-// - add parsing for inner models [x] (there are no inner modules since design is flattened)
-// - form a graph structure representing order of true dependencies of different blocks [x] (yosys already does this)
-// - implement LUT function for giving output on given input [x]
-// eval loop for executing configuration [x]
-// a single cycle should run all LUTs (now CLBs) and IOBs [x]
-// - create IOB logic for r/w memory [x]
-// output pins for drawing to screen [ ]
-// The order of LUTs in blif is random and actually needs to be represented
-// in a dependency structure
-
-// Each Var needs to hold its bit value [x]
-// assume single clock for now
-
-// never use traits for object instantiation, self-referencing traits are a bitch
-
-
-
 named!(
     get_model_name<&str, &str>,
     do_parse!(

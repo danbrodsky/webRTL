@@ -43,3 +43,7 @@ pub fn to_bit_vec(v: u64) -> Vec<u8> {
     }
     return bv
 }
+
+pub fn to_u32(v: Vec<u8>) -> u32 {
+    v.iter().rev().fold(0, |acc, &b| acc << 1 | b as u32)
+}
