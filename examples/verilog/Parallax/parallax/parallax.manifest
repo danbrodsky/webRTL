@@ -1,0 +1,2 @@
+Manifest {manifestHash = (28635453268682431,Nothing), successFlags = (20,20,False), portInNames = ["clk","rst","en"], portInTypes = ["","",""], portOutNames = ["pixel"], portOutTypes = ["[31:0]"], componentNames = ["parallax"]}
+
