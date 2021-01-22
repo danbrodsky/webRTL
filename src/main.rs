@@ -39,7 +39,7 @@ static LOGGER: SimpleLogger = SimpleLogger;
 
 use clap::{crate_version, App, Arg};
 
-use std::fs::{File, remove_file};
+use std::fs::{File};
 use std::io::prelude::*;
 use flate2::Compression;
 use flate2::write::GzEncoder;

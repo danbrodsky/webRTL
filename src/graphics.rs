@@ -11,9 +11,9 @@ use core::sync::atomic::{ AtomicUsize, Ordering};
 use crate::util::*;
 
 const VGA_WIDTH: usize = 320;
-const VGA_HEIGHT: usize = 10;
+const VGA_HEIGHT: usize = 200;
 pub const VGA_BUFFER_SIZE: usize = VGA_WIDTH * VGA_HEIGHT;
-pub const FRAME_CACHE_SIZE: usize = 5;
+pub const FRAME_CACHE_SIZE: usize = 160;
 
 pub type FrameBuffer = [u32; VGA_BUFFER_SIZE];
 

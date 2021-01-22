@@ -82,7 +82,6 @@ fn run(frames: JsValue) {
     assert!(head.len() == 0, "mistake when decompressing");
 
     // assert!(body.len() == 1, "wrong # frames {}", body.len());
-    info!("{}", _tail.len());
     for i in 0..FRAME_CACHE_SIZE {
         unsafe { FRAME_CACHE[i] = body[i] };
     }
@@ -133,7 +132,7 @@ fn run(frames: JsValue) {
 
         set_timeout(&w2,
             &f.borrow().as_ref().unwrap(),
-            1000 / 1);
+            1000 / 60);
 
     }) as Box<dyn FnMut()>));
 

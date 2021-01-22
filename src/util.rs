@@ -1,9 +1,19 @@
 use crate::config::STATE;
+use std::error::Error;
+
+pub type BoxErr = Box<dyn Error>;
 
 #[macro_use]
 macro_rules! get {
     ( $mv: expr ) => {
         STATE.lock().unwrap().get($mv).unwrap()
+    };
+}
+
+#[macro_use]
+macro_rules! u {
+    ( $mv: expr ) => {
+        $mv.lock().unwrap()
     };
 }
 

@@ -6,7 +6,6 @@ use nom::{
     branch::alt
 };
 
-
 use std::collections::HashMap;
 use std::sync::Mutex;
 use std::mem;
@@ -32,7 +31,7 @@ pub struct LUT {
 
 impl LUT {
 
-    pub fn new(inputs: Vec<&str>, output: &str, mappings: Vec<&str>) -> LUT {
+    pub fn new(inputs: Vec<&str>, output: &str, mappings: Vec<&str>) -> Result<LUT, BoxErr> {
 
         let mut lut = LUT{
             inputs: inputs.into_iter().map(|x| Var::new(x.to_string())).collect(),
@@ -44,11 +43,11 @@ impl LUT {
             let k = kv[0].to_string()
                 .chars()
                 .map(|c| c.to_digit(2).unwrap() as u8).collect();
-            let v = isize::from_str_radix(kv[1],2).unwrap() as u8;
+            let v = isize::from_str_radix(kv[1],2)? as u8;
             lut.mappings.insert(k, v);
         }
 
-        lut
+        Ok(lut)
     }
 
     /// executes the LUT, setting the output signal based on current input
@@ -56,13 +55,12 @@ impl LUT {
 
         let mut signals: Vec<u8> = vec!();
         for var in &self.inputs {
-            match STATE.lock().unwrap().get(&var.name) { // TODO: .lock().unwrap() as a macro possible?
+            match u!(STATE).get(&var.name) {
                 Some(mv) => signals.push(mv.val),
                 None => panic!("var '{}' was not initialized", var.name)
             };
         }
 
-        // TODO: replace STATE.lock().unwrap()... with util function
         match self.mappings.get(&signals) {
             Some(&v) => {
                 set(&self.output.name, v);
@@ -122,7 +120,7 @@ impl Register {
     fn exec(&self) {
         // TODO: handle varying clock triggers if possible
         trace!("{} set to {}", self.output.name, get!(&self.input[0].name).val);
-        let state = STATE.lock().unwrap();
+        let state = u!(STATE);
         let val = state.get(&self.input[0].name).unwrap().val;
         mem::drop(state);
         set(&self.output.name, val);
@@ -141,7 +139,7 @@ impl Var {
 
     pub fn new<S>(name: S) -> Var where S: Into<String> {
         let n: String = name.into();
-        let mut state = STATE.lock().unwrap();
+        let mut state = u!(STATE);
         if let Some(v) = state.get(&n) {
             // TODO: structs should just store name of var instead of copy
             Var{name: v.name.clone(), val: v.val.clone(), src: v.src.clone()}
@@ -271,7 +269,7 @@ impl Model {
     // each level i has no BLEs dependent on levels > i. Tossing these into a
     // compute shader will yield a partial parallelization similar to that of
     // a real FPGA.
-    pub fn group() {
+    pub fn _group() {
         panic!("Not implemented!");
     }
 
@@ -281,9 +279,9 @@ impl Model {
             e.exec();
         }
 
-        // TODO: check if this get compiled in when debug is disabled
+        // TODO: check if this gets compiled in when debug is disabled
         for out in &self.outputs {
-            trace!("output '{o}' value: {:#?}", STATE.lock().unwrap().get(&out.name).unwrap(),
+            trace!("output '{o}' value: {:#?}", u!(STATE).get(&out.name).unwrap(),
                   o=out.name);
         }
         // clear all input signals
@@ -408,13 +406,13 @@ named!(
         newline >>
         lut: separated_list0!(tag!("\n"), is_a!(" 01-")) >>
         newline >>
-        (Element::LUT(LUT::new(io[0 .. io.len()-1].to_vec(), io[io.len()-1], lut)))
+        (Element::LUT(LUT::new(io[0 .. io.len()-1].to_vec(), io[io.len()-1], lut).expect("LUT parse failure")))
     )
 );
 
 #[test]
 fn test_get_lut() {
-    let lut = Element::LUT(LUT::new(vec!("out0","out1","out2"), "return0", vec!("011 1", "100 1")));
+    let lut = Element::LUT(LUT::new(vec!("out0","out1","out2"), "return0", vec!("011 1", "100 1")).unwrap());
     assert_eq!(get_lut(".names out0 out1 out2 return0\n011 1\n100 1\nf"), Ok(("f", lut)));
 }
 
@@ -447,16 +445,16 @@ named!(
 
 #[test]
 fn test_get_reg() {
-    let mut reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), Some('2')));
+    let reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), Some('2')));
     assert_eq!(get_reg(".latch $0out[8:0][8] out[8] re clock 2\n"), Ok(("", reg)));
 
-    let mut reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), None));
+    let reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), None));
     assert_eq!(get_reg(".latch $0out[8:0][8] out[8] re clock\n"), Ok(("", reg)));
 
-    let mut reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", None, None));
+    let reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", None, None));
     assert_eq!(get_reg(".latch $0out[8:0][8] out[8]\n"), Ok(("", reg)));
 
-    let mut reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", None, Some('2')));
+    let reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", None, Some('2')));
     assert_eq!(get_reg(".latch $0out[8:0][8] out[8] 2\n"), Ok(("", reg)));
 }
 
@@ -519,7 +517,7 @@ named!(
 #[test]
 fn test_parse_blif() {
     // TODO: test complete parsing more thoroughly
-    let mut blif = Config::parse_blif(
+    let blif = Config::parse_blif(
 r#"
 # Generated by Yosys 0.9 (git sha1 UNKNOWN, gcc 10.1.0 -march=x86-64 -mtune=generic -O2 -fno-plt -fPIC -Os)
 
