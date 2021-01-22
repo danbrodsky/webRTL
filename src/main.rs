@@ -48,8 +48,6 @@ use crate::util::*;
 use crate::graphics::{VGA_BUFFER_SIZE,
                       FRAME_CACHE_SIZE,
                       FrameBuffer};
-use crate::config::STATE;
-
 fn main() {
     print!("allocating frame buffer");
 
@@ -84,18 +82,8 @@ fn main() {
             set("en", 1);
             sim.run();
 
-            // TODO: change to match pixel format
             let px = get_n_to_m("pixel", 0, 32);
 
-            // let mut color = 0xFF_00_00_00;
-            // for i in 0..3 {
-            //     if px[i] == 1 {
-            //         color |= 0xFF << (i*8);
-            //     }
-            // }
-            // if px == 1 {
-            //     color = 0xFF_FF_FF_FF;
-            // }
             info!("pixel {}, {} added", i, j);
             frames[i][j] = to_u32(px);
         }

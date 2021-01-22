@@ -69,7 +69,6 @@ pub mod config;
 pub mod sim;
 pub mod graphics;
 
-use crate::util::*;
 use crate::graphics::*;
 
 fn run(frames: JsValue) {
@@ -81,13 +80,9 @@ fn run(frames: JsValue) {
     let (head, body, _tail) = unsafe { data.align_to::<FrameBuffer>()};
     assert!(head.len() == 0, "mistake when decompressing");
 
-    // assert!(body.len() == 1, "wrong # frames {}", body.len());
     for i in 0..FRAME_CACHE_SIZE {
         unsafe { FRAME_CACHE[i] = body[i] };
     }
-
-    // let config = config::Config::new(&config_data);
-    // let sim = sim::Simulation::init(config);
 
     let document = web_sys::window().unwrap().document().unwrap();
     let canvas = document.get_element_by_id("canvas").unwrap();

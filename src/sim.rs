@@ -22,9 +22,6 @@ impl Simulation {
     }
 
     /// runs the simulation for one cycle
-    // TODO: This needs to run in a separate thread
-    // TODO: thread calls into wasm graphics backend when necessary
-    // this will probably require a simulated MMU layer in design
     pub fn run(&self) {
 
         for m in &self.models {
