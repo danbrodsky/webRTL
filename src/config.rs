@@ -14,7 +14,8 @@ use crate::util::*;
 
 lazy_static! {
     /// Stores the current state of all signals
-    pub static ref STATE: Mutex<HashMap<String, Var>> = Mutex::new(HashMap::new());
+    pub static ref STATE: Mutex<HashMap<String, Var>> =
+        Mutex::new(HashMap::new());
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -31,19 +32,32 @@ pub struct LUT {
 
 impl LUT {
 
-    pub fn new(inputs: Vec<&str>, output: &str, mappings: Vec<&str>) -> Result<LUT, BoxErr> {
+    pub fn new(inputs: Vec<&str>, output: &str, mappings: Vec<&str>)
+               -> Result<LUT, Error> {
+
+        const E: Error = Error::InvalidInput(TableType::LUT);
 
         let mut lut = LUT{
-            inputs: inputs.into_iter().map(|x| Var::new(x.to_string())).collect(),
-            output: Var::new(output.to_string()),
+            inputs: inputs
+                .into_iter()
+                .try_fold::<_,_,Result<_,Error>>(vec![],|mut acc, x| {
+                    acc.push(Var::new(x.to_string())?);
+                    Ok(acc)
+                })?,
+            output: Var::new(output.to_string())?,
             mappings: HashMap::new()
         };
         for line in mappings {
             let kv: Vec<&str> = line.split_whitespace().collect();
-            let k = kv[0].to_string()
+            let k = kv[0]
                 .chars()
-                .map(|c| c.to_digit(2).unwrap() as u8).collect();
-            let v = isize::from_str_radix(kv[1],2)? as u8;
+                .try_fold::<_,_,Result<_,Error>>(
+                    vec![], |mut acc: Vec<u8>, c: char| {
+                        acc.push(c.to_digit(2).ok_or(E)? as u8);
+                        Ok(acc)
+                    })?;
+
+            let v = isize::from_str_radix(kv[1],2).map_err(|_| E)? as u8;
             lut.mappings.insert(k, v);
         }
 
@@ -51,13 +65,14 @@ impl LUT {
     }
 
     /// executes the LUT, setting the output signal based on current input
-    fn exec(&self) {
+    fn exec(&self) -> Result<(), Error> {
 
         let mut signals: Vec<u8> = vec!();
         for var in &self.inputs {
-            match u!(STATE).get(&var.name) {
-                Some(mv) => signals.push(mv.val),
-                None => panic!("var '{}' was not initialized", var.name)
+            let model_var = get(&var.name);
+            match model_var {
+                Ok(val) => signals.push(val),
+                Err(e) => return Err(e)
             };
         }
 
@@ -70,12 +85,14 @@ impl LUT {
                 set(&self.output.name, 0);
             }
         };
+
+        Ok(())
     }
 }
 
 
-/// Direct mapping of input signal to output signal based on clock or other hardware
-/// Rarely used in design, usually just maps signals to start at end of cycle
+/// Direct mapping of input signal to output signal based on clock/hardware
+/// Rarely used in design, typically maps signals to start values at cycle end
 #[derive(Debug, Eq, PartialEq)]
 pub struct Register {
     input: Vec<Var>,
@@ -90,7 +107,9 @@ impl Register {
     pub fn new(input: &str,
                output: &str,
                clock: Option<(&str, &str)>,
-               init: Option<char>) -> Register {
+               init: Option<char>) -> Result<Register, Error> {
+
+        const E: Error = Error::InvalidInput(TableType::LUT);
 
         // TODO: default global clock for latch
         let mut signal = "re";
@@ -104,26 +123,27 @@ impl Register {
             None => {}
         };
         match init {
-            Some(i) => { start = i.to_digit(10).unwrap() as u8; }
+            Some(i) => { start = i.to_digit(10).ok_or(E)? as u8; }
             None => {}
         };
 
-        Register{
-            input: vec!(Var::new(input)),
-            output: Var::new(output),
+        Ok(Register{
+            input: vec!(Var::new(input)?),
+            output: Var::new(output)?,
             signal: signal.to_string(),
-            control: Var::new(control),
+            control: Var::new(control)?,
             init: start
-        }
+        })
     }
 
-    fn exec(&self) {
+    fn exec(&self) -> Result<(), Error> {
         // TODO: handle varying clock triggers if possible
-        trace!("{} set to {}", self.output.name, get!(&self.input[0].name).val);
-        let state = u!(STATE);
-        let val = state.get(&self.input[0].name).unwrap().val;
-        mem::drop(state);
+        trace!("{} set to {}", self.output.name, get(&self.input[0].name)?);
+        let val = get(&self.input[0].name)?;
+        // mem::drop(state);
         set(&self.output.name, val);
+
+        Ok(())
     }
 }
 
@@ -137,17 +157,19 @@ pub struct Var  {
 
 impl Var {
 
-    pub fn new<S>(name: S) -> Var where S: Into<String> {
+    pub fn new<S>(name: S) -> Result<Var, Error> where S: Into<String> {
         let n: String = name.into();
-        let mut state = u!(STATE);
+        let mut state = STATE.lock()?;
         if let Some(v) = state.get(&n) {
             // TODO: structs should just store name of var instead of copy
-            Var{name: v.name.clone(), val: v.val.clone(), src: v.src.clone()}
+            Ok(Var{name: v.name.clone(),
+                   val: v.val.clone(),
+                   src: v.src.clone()})
         }
         else {
             let v = Var{name: n.clone(), val: 0, src: 0};
             state.insert(n.clone(), v);
-            Var{name: n, val: 0, src: 0}
+            Ok(Var{name: n, val: 0, src: 0})
         }
 
     }
@@ -162,11 +184,11 @@ pub enum Element {
 }
 
 impl Element {
-    fn exec(&self) {
+    fn exec(&self) -> Result<(), Error> {
         match self {
             Element::LUT(l) => l.exec(),
             Element::Register(r) => r.exec()
-        };
+        }
     }
 }
 
@@ -204,7 +226,9 @@ impl Model {
 
         let mut sorted_element_idx: Vec<usize> = vec!();
 
-        let mut seen_vars: Vec<String> = self.inputs.iter().map(|i| i.name.clone()).collect();
+        let mut seen_vars: Vec<String> =
+            self.inputs.iter().map(|i| i.name.clone()).collect();
+
         let mut element_inputs: &Vec<Var>;
         let mut element_output: &Var;
 
@@ -255,7 +279,9 @@ impl Model {
         let mut sorted_elements: Vec<Element> = vec!();
         for idx in sorted_element_idx {
             let dummy: LUT = Default::default();
-            sorted_elements.push(mem::replace(&mut elements[idx], Element::LUT(dummy)));
+            sorted_elements.push(
+                mem::replace(&mut elements[idx], Element::LUT(dummy))
+            );
         }
 
         self.elements = sorted_elements;
@@ -274,20 +300,23 @@ impl Model {
     }
 
 
-    pub fn eval(&self) {
+    pub fn eval(&self) -> Result<(), Error> {
         for e in &self.elements {
             e.exec();
         }
 
         // TODO: check if this gets compiled in when debug is disabled
         for out in &self.outputs {
-            trace!("output '{o}' value: {:#?}", u!(STATE).get(&out.name).unwrap(),
-                  o=out.name);
+            trace!("output '{o}' value: {:#?}",
+                   get(&out.name)?,
+                   o=out.name);
         }
         // clear all input signals
         for inp in &self.inputs {
             set(&inp.name, 0);
         }
+
+        Ok(())
     }
 }
 
@@ -299,18 +328,18 @@ pub struct Config {
 
 
 impl Config {
-    pub fn new(blif: &str) -> Self {
-        Config{models: Config::parse_blif(blif)}
+    pub fn new(blif: &str) -> Result<Self, Error> {
+        Ok(Config{models: Config::parse_blif(blif)?})
     }
 
     /// parses blif-formatted data into comprising models
-    pub fn parse_blif(mut input: &str) -> Vec<Model> {
+    pub fn parse_blif(mut input: &str) -> Result<Vec<Model>, Error> {
 
         let mut models: Vec<Model> = vec!();
         let mut res;
 
         while input.len() > 0 {
-            res = opt(get_model)(input).unwrap();
+            res = opt(get_model)(input)?;
             input = res.0;
             match res.1 {
                 Some(m) => models.push(m),
@@ -322,7 +351,7 @@ impl Config {
             };
         }
         trace!("Parsed configuration: {:#?}", models);
-        models
+        Ok(models)
     }
 }
 
@@ -346,8 +375,12 @@ named!(
         alt!(tag!(".inputs ") | tag!(".inputs")) >>
         inputs: separated_list0!(tag!(" "), is_not!(" \n")) >>
         newline >>
-        (inputs.into_iter().map(|x| Var::new(x.to_string())).collect())
-    )
+        (inputs.into_iter()
+         .fold(std::vec![],|mut acc, x| {
+             acc.push(Var::new(x.to_string())
+                      .expect("Parsing inputs failed"));
+             acc
+         })))
 );
 
 #[test]
@@ -375,8 +408,12 @@ named!(
         alt!(tag!(".outputs ") | tag!(".outputs")) >>
         outputs: separated_list0!(tag!(" "), is_not!(" \n")) >>
         newline >>
-        (outputs.into_iter().map(|x| Var::new(x.to_string())).collect())
-    )
+        (outputs.into_iter()
+         .fold(std::vec![],|mut acc, x| {
+             acc.push(Var::new(x.to_string())
+                      .expect("Parsing outputs failed"));
+             acc
+         })))
 );
 
 #[test]
@@ -406,21 +443,29 @@ named!(
         newline >>
         lut: separated_list0!(tag!("\n"), is_a!(" 01-")) >>
         newline >>
-        (Element::LUT(LUT::new(io[0 .. io.len()-1].to_vec(), io[io.len()-1], lut).expect("LUT parse failure")))
-    )
+            (Element::LUT(
+                LUT::new(io[0 .. io.len()-1].to_vec(),
+                         io[io.len()-1], lut).expect("Parsing LUT failed"))))
 );
 
 #[test]
 fn test_get_lut() {
-    let lut = Element::LUT(LUT::new(vec!("out0","out1","out2"), "return0", vec!("011 1", "100 1")).unwrap());
-    assert_eq!(get_lut(".names out0 out1 out2 return0\n011 1\n100 1\nf"), Ok(("f", lut)));
+    let lut = Element::LUT(
+        LUT::new(vec!("out0","out1","out2"),
+                 "return0",
+                 vec!("011 1", "100 1")).unwrap());
+    assert_eq!(
+        get_lut(".names out0 out1 out2 return0\n011 1\n100 1\nf"),
+        Ok(("f", lut))
+    );
 }
 
 named!(
     get_clock<&str, (&str, &str)>,
     do_parse!(
         tag!(" ") >>
-        signal: alt!(tag!("fe") | tag!("re") | tag!("ah") | tag!("al") | tag!("as")) >>
+            signal: alt!(tag!("fe") | tag!("re") |
+                         tag!("ah") | tag!("al") | tag!("as")) >>
         tag!(" ") >>
         control: is_not!(" \n") >>
         ((signal, control))
@@ -439,23 +484,50 @@ named!(
         opt!(complete!(tag!(" "))) >>
         init: opt!(one_of!("0123")) >>
         newline >>
-        (Element::Register(Register::new(input, output, clock, init)))
+            (Element::Register(Register::new(input, output, clock, init)
+                               .expect("Parsing Register failed.")))
     )
 );
 
 #[test]
-fn test_get_reg() {
-    let reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), Some('2')));
-    assert_eq!(get_reg(".latch $0out[8:0][8] out[8] re clock 2\n"), Ok(("", reg)));
+fn test_get_reg() -> Result<(), Error> {
+    let reg = Element::Register(
+        Register::new("$0out[8:0][8]",
+                      "out[8]",
+                      Some(("re", "clock")),
+                      Some('2'))?);
+    assert_eq!(
+        get_reg(".latch $0out[8:0][8] out[8] re clock 2\n"), Ok(("", reg))
+    );
 
-    let reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", Some(("re", "clock")), None));
-    assert_eq!(get_reg(".latch $0out[8:0][8] out[8] re clock\n"), Ok(("", reg)));
+    let reg = Element::Register(
+        Register::new("$0out[8:0][8]",
+                      "out[8]",
+                      Some(("re", "clock")),
+                      None)?);
+    assert_eq!(
+        get_reg(".latch $0out[8:0][8] out[8] re clock\n"), Ok(("", reg))
+    );
 
-    let reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", None, None));
-    assert_eq!(get_reg(".latch $0out[8:0][8] out[8]\n"), Ok(("", reg)));
+    let reg = Element::Register(
+        Register::new("$0out[8:0][8]",
+                      "out[8]",
+                      None,
+                      None)?);
+    assert_eq!(
+        get_reg(".latch $0out[8:0][8] out[8]\n"), Ok(("", reg))
+    );
 
-    let reg = Element::Register(Register::new("$0out[8:0][8]", "out[8]", None, Some('2')));
-    assert_eq!(get_reg(".latch $0out[8:0][8] out[8] 2\n"), Ok(("", reg)));
+    let reg = Element::Register(
+        Register::new("$0out[8:0][8]",
+                      "out[8]",
+                      None,
+                      Some('2'))?);
+    assert_eq!(
+        get_reg(".latch $0out[8:0][8] out[8] 2\n"), Ok(("", reg))
+    );
+
+    Ok(())
 }
 
 named!(
@@ -515,7 +587,7 @@ named!(
 
 
 #[test]
-fn test_parse_blif() {
+fn test_parse_blif() -> Result<(), Error> {
     // TODO: test complete parsing more thoroughly
     let blif = Config::parse_blif(
 r#"
@@ -542,11 +614,13 @@ r#"
 .latch $0\out[255:0][229] out[229] re clock 2
 .latch $0\out[255:0][230] out[230] re clock 2
 .end
-"#);
+"#)?;
 
     if blif.len() != 2 {
         assert!(false, "wrong number models returned.");
     }
+
+    Ok(())
 }
 
 #[test]

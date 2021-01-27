@@ -48,7 +48,7 @@ use crate::util::*;
 use crate::graphics::{VGA_BUFFER_SIZE,
                       FRAME_CACHE_SIZE,
                       FrameBuffer};
-fn main() {
+fn main() -> Result<(), Error> {
     print!("allocating frame buffer");
 
     log::set_logger(&LOGGER).unwrap();
@@ -65,7 +65,7 @@ fn main() {
         .get_matches();
 
     let config_data = std::fs::read_to_string(args.value_of("blif").unwrap()).expect("blif file being read");
-    let config = config::Config::new(&config_data);
+    let config = config::Config::new(&config_data)?;
 
     let sim = sim::Simulation::init(config);
 
@@ -94,5 +94,7 @@ fn main() {
     let res = enc.finish().unwrap();
     let mut file = File::create("frames.gz").expect("failed to create file");
     file.write_all(&res[..]).expect("saving to file failed");
+
+    Ok(())
 
 }

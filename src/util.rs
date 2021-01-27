@@ -1,20 +1,58 @@
-use crate::config::STATE;
-use std::error::Error;
+use crate::config::{STATE, Var};
+use std::num;
+use std::sync;
 
-pub type BoxErr = Box<dyn Error>;
-
-#[macro_use]
-macro_rules! get {
-    ( $mv: expr ) => {
-        STATE.lock().unwrap().get($mv).unwrap()
-    };
-}
+// pub type BoxErr = Box<dyn Error>;
 
 #[macro_use]
 macro_rules! u {
     ( $mv: expr ) => {
         $mv.lock().unwrap()
     };
+}
+
+
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub enum TableType {
+    LUT,
+
+}
+
+/// Error types that can be returned in this project
+#[derive(Debug)]
+pub enum Error {
+    /// Error when creating element
+    InvalidInput(TableType),
+
+    /// previous mutex owner panicked
+    Locking,
+
+    /// a read was made for a value that was not stored in the current state
+    InvalidRead,
+
+    /// Error occurred while parsing the blif spec
+    ParsingFailed(String)
+
+
+}
+
+impl From<nom::Err<nom::error::Error<&str>>> for Error {
+    fn from(err: nom::Err<nom::error::Error<&str>>) -> Error {
+        Error::ParsingFailed(err.to_string())
+    }
+}
+
+
+impl<T> From<sync::PoisonError<T>> for Error {
+    fn from(err: sync::PoisonError<T>) -> Error {
+        Error::Locking
+    }
+}
+
+
+pub fn get(var: &str) -> Result<u8, Error> {
+    let state = STATE.lock()?;
+    Ok(state.get(var).ok_or(Error::InvalidRead)?.val)
 }
 
 pub fn get_n_to_m(var: &str, n: usize, m: usize) -> Vec<u8> {
